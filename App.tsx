@@ -6,8 +6,9 @@
 import {Video} from '@google/genai';
 import React, {useCallback, useEffect, useState} from 'react';
 import ApiKeyDialog from './components/ApiKeyDialog';
+import ExternalToolsDialog from './components/ExternalToolsDialog';
 import TemplateLibrary from './components/TemplateLibrary';
-import {CurvedArrowDownIcon} from './components/icons';
+import {CurvedArrowDownIcon, WrenchIcon} from './components/icons';
 import LoadingIndicator from './components/LoadingIndicator';
 import PromptForm from './components/PromptForm';
 import VideoResult from './components/VideoResult';
@@ -31,6 +32,7 @@ const App: React.FC = () => {
   const [lastVideoObject, setLastVideoObject] = useState<Video | null>(null);
   const [lastVideoBlob, setLastVideoBlob] = useState<Blob | null>(null);
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
+  const [showToolsDialog, setShowToolsDialog] = useState(false);
 
   // A single state to hold the initial values for the prompt form
   const [initialFormValues, setInitialFormValues] =
@@ -295,10 +297,22 @@ const App: React.FC = () => {
       {showApiKeyDialog && (
         <ApiKeyDialog onContinue={handleApiKeyDialogContinue} />
       )}
-      <header className="py-6 flex justify-center items-center px-8 relative z-10 flex-shrink-0">
+      {showToolsDialog && (
+        <ExternalToolsDialog onClose={() => setShowToolsDialog(false)} />
+      )}
+      <header className="py-6 flex justify-between items-center px-8 relative z-10 flex-shrink-0 max-w-6xl mx-auto w-full">
+        <div className="w-12"></div> {/* Spacer to balance layout */}
         <h1 className="text-5xl font-semibold tracking-wide text-center bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
           Veo Studio
         </h1>
+        <button
+          onClick={() => setShowToolsDialog(true)}
+          className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 hover:border-indigo-500 transition-all text-xs font-medium text-gray-300 hover:text-white"
+          title="Ferramentas para criar vídeos longos"
+        >
+          <WrenchIcon className="w-4 h-4" />
+          <span className="hidden sm:inline">Ferramentas de Edição</span>
+        </button>
       </header>
       <main className="w-full max-w-4xl mx-auto flex-grow flex flex-col overflow-hidden relative">
         {appState === AppState.IDLE ? (

@@ -24,6 +24,7 @@ import {
   Disc,
   Download,
   Droplets,
+  ExternalLink,
   Eye,
   Feather,
   FileVideo,
@@ -74,6 +75,7 @@ import {
   User,
   Utensils,
   Wand2,
+  Wrench,
   X,
   Zap,
 } from 'lucide-react';
@@ -180,6 +182,14 @@ export const AudioLinesIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) =
 
 export const MicIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <Mic {...defaultProps} {...props} />
+);
+
+export const WrenchIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <Wrench {...defaultProps} {...props} />
+);
+
+export const ExternalLinkIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <ExternalLink {...defaultProps} {...props} />
 );
 
 // New Icons for Templates

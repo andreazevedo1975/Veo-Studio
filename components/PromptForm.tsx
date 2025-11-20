@@ -769,15 +769,29 @@ const PromptForm: React.FC<PromptFormProps> = ({
               <option value={OutputFormat.MP4}>MP4</option>
               <option value={OutputFormat.MOV}>MOV</option>
             </CustomSelect>
-            <CustomSelect
-              label="Duração"
-              value={durationSeconds.toString()}
-              onChange={(e) => setDurationSeconds(Number(e.target.value))}
-              icon={<ClockIcon className="w-5 h-5 text-gray-400" />}
-              disabled={isRefMode || isExtendMode || isImageMode || isAudioMode || isSpeechMode}>
-              <option value="5">5 segundos</option>
-              <option value="10">10 segundos</option>
-            </CustomSelect>
+            <div className="flex flex-col">
+              <label className="text-xs block mb-1.5 font-medium text-gray-400">
+                Duração (seg)
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <ClockIcon className="w-5 h-5 text-gray-400" />
+                </div>
+                <input
+                  type="number"
+                  value={durationSeconds}
+                  onChange={(e) => setDurationSeconds(Number(e.target.value))}
+                  min={4}
+                  max={8} // Enforcing API limit
+                  step={1}
+                  disabled={isRefMode || isExtendMode || isImageMode || isAudioMode || isSpeechMode}
+                  className="w-full bg-[#1f1f1f] border border-gray-600 rounded-lg pl-10 pr-3 py-2.5 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-700/50 disabled:border-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-gray-200"
+                />
+              </div>
+              <p className="text-[10px] text-gray-500 mt-1 leading-tight">
+                Max: 8s. Use "Estender" para vídeos mais longos.
+              </p>
+            </div>
           </div>
         </div>
       )}

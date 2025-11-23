@@ -5,6 +5,8 @@
 */
 import React from 'react';
 import {
+  Activity,
+  AlertTriangle,
   ArrowDown,
   ArrowRight,
   AudioLines,
@@ -14,22 +16,31 @@ import {
   Brush,
   Building2,
   Camera,
+  Captions,
+  CassetteTape,
   ChevronDown,
+  CircleHelp,
   Clapperboard,
   Clock,
+  CloudDrizzle,
   CloudFog,
   CloudLightning,
   CloudRain,
   Coffee,
+  Church,
   Disc,
   Download,
   Droplets,
+  Drum,
   ExternalLink,
   Eye,
   Feather,
+  FileImage,
   FileVideo,
   Film,
   Flame,
+  Flower2,
+  Frown,
   Gamepad2,
   Gem,
   Ghost,
@@ -43,9 +54,11 @@ import {
   Image as ImageIconLucide,
   Image,
   KeyRound,
+  Landmark,
   Laptop,
   Layers,
   Loader2,
+  Meh,
   Mic,
   Mic2,
   MonitorPlay,
@@ -53,22 +66,27 @@ import {
   Palette,
   PartyPopper,
   PawPrint,
+  Piano,
   Plane,
   Plus,
   Radio,
   RefreshCw,
+  Repeat,
   Rocket,
   Search,
   Shield,
   Shirt,
   ShoppingBag,
+  Skull,
   SlidersHorizontal,
   Smartphone,
   Smile,
   Sparkles,
   Speaker,
   Sprout,
+  Star,
   Sun,
+  Sunrise,
   Trophy,
   Tv,
   UploadCloud,
@@ -76,6 +94,7 @@ import {
   Utensils,
   Wand2,
   Wrench,
+  Wind,
   X,
   Zap,
 } from 'lucide-react';
@@ -87,6 +106,18 @@ const defaultProps = {
 export const KeyIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <KeyRound {...defaultProps} {...props} />
 );
+
+export const CircleHelpIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <CircleHelp {...defaultProps} {...props} />
+);
+
+export const CaptionsIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <Captions {...defaultProps} {...props} />
+);
+
+export const AlertTriangleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (
+  props,
+) => <AlertTriangle {...defaultProps} {...props} />;
 
 export const ArrowPathIcon: React.FC<React.SVGProps<SVGSVGElement>> = (
   props,
@@ -160,6 +191,10 @@ export const FileVideoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (
   props,
 ) => <FileVideo {...defaultProps} {...props} />;
 
+export const FileImageIcon: React.FC<React.SVGProps<SVGSVGElement>> = (
+  props,
+) => <FileImage {...defaultProps} {...props} />;
+
 export const DownloadIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <Download {...defaultProps} {...props} />
 );
@@ -192,6 +227,10 @@ export const ExternalLinkIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props)
   <ExternalLink {...defaultProps} {...props} />
 );
 
+export const RepeatIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <Repeat {...defaultProps} {...props} />
+);
+
 // New Icons for Templates
 export const ShoppingBagIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <ShoppingBag {...defaultProps} {...props} />;
 export const RadioIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Radio {...defaultProps} {...props} />;
@@ -219,6 +258,7 @@ export const ShirtIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Sh
 export const MagicWandIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Wand2 {...defaultProps} {...props} />;
 export const CoffeeIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Coffee {...defaultProps} {...props} />;
 export const LaptopIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Laptop {...defaultProps} {...props} />;
+export const LandmarkIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Landmark {...defaultProps} {...props} />;
 
 // Music Icons
 export const HeadphonesIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Headphones {...defaultProps} {...props} />;
@@ -226,6 +266,15 @@ export const GuitarIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <G
 export const Mic2Icon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Mic2 {...defaultProps} {...props} />;
 export const DiscIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Disc {...defaultProps} {...props} />;
 export const SpeakerIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Speaker {...defaultProps} {...props} />;
+export const StarIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Star {...defaultProps} {...props} />;
+export const ActivityIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Activity {...defaultProps} {...props} />;
+export const PianoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Piano {...defaultProps} {...props} />;
+export const DrumIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Drum {...defaultProps} {...props} />;
+export const SkullIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Skull {...defaultProps} {...props} />;
+export const ChurchIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Church {...defaultProps} {...props} />;
+export const WindIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Wind {...defaultProps} {...props} />;
+export const Flower2Icon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Flower2 {...defaultProps} {...props} />;
+export const CassetteTapeIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <CassetteTape {...defaultProps} {...props} />;
 
 // Emotion Icons
 export const HeartIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Heart {...defaultProps} {...props} />;
@@ -243,6 +292,10 @@ export const ShieldIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <S
 export const SproutIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Sprout {...defaultProps} {...props} />;
 export const BabyIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Baby {...defaultProps} {...props} />;
 export const GemIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Gem {...defaultProps} {...props} />;
+export const CloudDrizzleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <CloudDrizzle {...defaultProps} {...props} />;
+export const SunriseIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Sunrise {...defaultProps} {...props} />;
+export const FrownIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Frown {...defaultProps} {...props} />;
+export const MehIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => <Meh {...defaultProps} {...props} />;
 
 // This icon had a different stroke width in the original file, so we preserve it.
 export const CurvedArrowDownIcon: React.FC<React.SVGProps<SVGSVGElement>> = (

@@ -5,10 +5,10 @@
 */
 import {Video} from '@google/genai';
 import React, {useCallback, useEffect, useState} from 'react';
-import ApiKeyDialog from './components/ApiKeyDialog';
 import ExternalToolsDialog from './components/ExternalToolsDialog';
 import TemplateLibrary from './components/TemplateLibrary';
-import {CurvedArrowDownIcon, WrenchIcon} from './components/icons';
+import Tutorial, { TutorialStep } from './components/Tutorial';
+import {CircleHelpIcon, CurvedArrowDownIcon, WrenchIcon} from './components/icons';
 import LoadingIndicator from './components/LoadingIndicator';
 import PromptForm from './components/PromptForm';
 import VideoResult from './components/VideoResult';
@@ -22,6 +22,34 @@ import {
   VideoFile,
 } from './types';
 
+const TUTORIAL_STEPS: TutorialStep[] = [
+  {
+    targetId: 'tour-templates',
+    title: 'Comece Rápido',
+    content: 'Escolha um destes modelos pré-configurados para garantir um resultado incrível sem esforço. Basta clicar e adaptar!'
+  },
+  {
+    targetId: 'tour-prompt',
+    title: 'Sua Visão',
+    content: 'Digite aqui o que você imagina. O sistema buscará ou gerará o melhor conteúdo gratuito para sua ideia.'
+  },
+  {
+    targetId: 'tour-modes',
+    title: 'Muito mais que Vídeo',
+    content: 'Clique aqui para alternar entre criar Vídeos (Stock), Imagens (IA), Músicas ou Narrações.'
+  },
+  {
+    targetId: 'tour-settings',
+    title: 'Ajustes Finos',
+    content: 'Abra as configurações para definir a proporção, duração e formato do seu projeto.'
+  },
+  {
+    targetId: 'tour-generate',
+    title: 'Criar Gratuitamente',
+    content: 'Quando estiver pronto, clique aqui. Esta ferramenta utiliza serviços gratuitos e bancos de imagens para criar seu conteúdo.'
+  }
+];
+
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -31,32 +59,34 @@ const App: React.FC = () => {
   );
   const [lastVideoObject, setLastVideoObject] = useState<Video | null>(null);
   const [lastVideoBlob, setLastVideoBlob] = useState<Blob | null>(null);
-  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const [showToolsDialog, setShowToolsDialog] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   // A single state to hold the initial values for the prompt form
   const [initialFormValues, setInitialFormValues] =
     useState<GenerateVideoParams | null>(null);
 
-  // Check for API key on initial load
+  // Check tutorial status
   useEffect(() => {
-    const checkApiKey = async () => {
-      if (window.aistudio) {
-        try {
-          if (!(await window.aistudio.hasSelectedApiKey())) {
-            setShowApiKeyDialog(true);
-          }
-        } catch (error) {
-          console.warn(
-            'aistudio.hasSelectedApiKey check failed, assuming no key selected.',
-            error,
-          );
-          setShowApiKeyDialog(true);
-        }
-      }
-    };
-    checkApiKey();
-  }, []);
+    const hasSeenTutorial = localStorage.getItem('veo_tutorial_completed');
+    
+    if (!hasSeenTutorial && !showToolsDialog && appState === AppState.IDLE) {
+      const timer = setTimeout(() => setShowTutorial(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [showToolsDialog, appState]);
+
+  // Scroll to top when entering IDLE state
+  useEffect(() => {
+    if (appState === AppState.IDLE) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [appState]);
+
+  const handleTutorialComplete = () => {
+    localStorage.setItem('veo_tutorial_completed', 'true');
+    setShowTutorial(false);
+  };
 
   const showStatusError = (message: string) => {
     setErrorMessage(message);
@@ -64,27 +94,11 @@ const App: React.FC = () => {
   };
 
   const handleGenerate = useCallback(async (params: GenerateVideoParams) => {
-    if (window.aistudio) {
-      try {
-        if (!(await window.aistudio.hasSelectedApiKey())) {
-          setShowApiKeyDialog(true);
-          return;
-        }
-      } catch (error) {
-        console.warn(
-          'aistudio.hasSelectedApiKey check failed, assuming no key selected.',
-          error,
-        );
-        setShowApiKeyDialog(true);
-        return;
-      }
-    }
-
     setAppState(AppState.LOADING);
     setErrorMessage(null);
     setLastConfig(params);
-    // Reset initial form values for the next fresh start
     setInitialFormValues(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     try {
       const {objectUrl, blob, video} = await generateVideo(params);
@@ -93,75 +107,14 @@ const App: React.FC = () => {
       setLastVideoObject(video);
       setAppState(AppState.SUCCESS);
     } catch (error: any) {
-      console.error('Video generation failed:', error);
+      console.error('Generation failed:', error);
 
-      // Robust error message extraction
-      let rawMessage = 'An unknown error occurred.';
-      if (typeof error === 'string') {
-        rawMessage = error;
-      } else if (error instanceof Error) {
-        rawMessage = error.message;
-      } else if (typeof error === 'object' && error !== null) {
-        try {
-          rawMessage = JSON.stringify(error);
-        } catch {
-          rawMessage = String(error);
-        }
-      }
+      let rawMessage = 'Ocorreu um erro desconhecido.';
+      if (typeof error === 'string') rawMessage = error;
+      else if (error instanceof Error) rawMessage = error.message;
 
-      let userFriendlyMessage = `Falha na geração do vídeo.`;
-      let shouldOpenDialog = false;
-      
-      // Check for Quota/429 errors in various formats (JSON string or plain text)
-      const isQuotaError = 
-        rawMessage.includes('429') || 
-        rawMessage.includes('RESOURCE_EXHAUSTED') || 
-        rawMessage.includes('quota');
-      
-      const isAuthError = 
-        rawMessage.includes('API_KEY_INVALID') || 
-        rawMessage.includes('permission denied');
-      
-      const isNotFound = 
-        rawMessage.includes('Requested entity was not found');
-
-      if (isNotFound) {
-        userFriendlyMessage =
-          'Modelo não encontrado. Verifique se sua chave de API tem acesso ao modelo Veo.';
-        shouldOpenDialog = true;
-      } else if (isAuthError) {
-        userFriendlyMessage =
-          'Chave de API inválida ou sem permissão. Selecione uma chave de API válida.';
-        shouldOpenDialog = true;
-      } else if (isQuotaError) {
-        userFriendlyMessage =
-          'Cota excedida (Erro 429). O Veo requer um projeto Google Cloud com faturamento ativado e cota disponível. Verifique seu plano.';
-        // We allow them to change the key via the button in the error view, rather than forcing the dialog
-        shouldOpenDialog = false; 
-      } else {
-        // If it's a raw JSON string, try to clean it up for display
-        if (rawMessage.trim().startsWith('{')) {
-           try {
-             const parsed = JSON.parse(rawMessage);
-             if (parsed.error && parsed.error.message) {
-               userFriendlyMessage = `Erro: ${parsed.error.message}`;
-             } else {
-                userFriendlyMessage = `Erro na API: ${rawMessage.substring(0, 100)}...`;
-             }
-           } catch {
-             userFriendlyMessage = `Erro: ${rawMessage}`;
-           }
-        } else {
-           userFriendlyMessage = `Erro: ${rawMessage}`;
-        }
-      }
-
-      setErrorMessage(userFriendlyMessage);
+      setErrorMessage(rawMessage);
       setAppState(AppState.ERROR);
-
-      if (shouldOpenDialog) {
-        setShowApiKeyDialog(true);
-      }
     }
   }, []);
 
@@ -171,21 +124,6 @@ const App: React.FC = () => {
     }
   }, [lastConfig, handleGenerate]);
 
-  const handleApiKeyDialogContinue = async () => {
-    setShowApiKeyDialog(false);
-    if (window.aistudio) {
-      await window.aistudio.openSelectKey();
-    }
-    // Optionally retry immediately or let user click retry
-  };
-
-  const handleSwitchKey = async () => {
-    if (window.aistudio) {
-      await window.aistudio.openSelectKey();
-      // If we are in error state, the user can click "Try Again" after switching
-    }
-  };
-
   const handleNewVideo = useCallback(() => {
     setAppState(AppState.IDLE);
     setVideoUrl(null);
@@ -193,23 +131,15 @@ const App: React.FC = () => {
     setLastConfig(null);
     setLastVideoObject(null);
     setLastVideoBlob(null);
-    setInitialFormValues(null); // Clear the form state
+    setInitialFormValues(null);
   }, []);
-
-  const handleTryAgainFromError = useCallback(() => {
-    if (lastConfig) {
-      setInitialFormValues(lastConfig);
-      setAppState(AppState.IDLE);
-      setErrorMessage(null);
-    } else {
-      // Fallback to a fresh start if there's no last config
-      handleNewVideo();
-    }
-  }, [lastConfig, handleNewVideo]);
 
   const handleTemplateSelect = useCallback(
     (templateParams: GenerateVideoParams) => {
       setInitialFormValues(templateParams);
+      setTimeout(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      }, 100);
     },
     [],
   );
@@ -227,7 +157,7 @@ const App: React.FC = () => {
   };
 
   const handleExtend = useCallback(async () => {
-    if (lastConfig && lastVideoBlob && lastVideoObject) {
+    if (lastConfig && lastVideoBlob) {
       try {
         const base64Data = await blobToBase64(lastVideoBlob);
         const file = new File([lastVideoBlob], 'last_video.mp4', {
@@ -236,23 +166,21 @@ const App: React.FC = () => {
         const videoFile: VideoFile = {file, base64: base64Data};
 
         setInitialFormValues({
-          ...lastConfig, // Carry over model, aspect ratio
+          ...lastConfig,
           mode: GenerationMode.EXTEND_VIDEO,
-          prompt: '', // Start with a blank prompt
-          inputVideo: videoFile, // for preview in the form
-          inputVideoObject: lastVideoObject, // for the API call
-          resolution: Resolution.P720, // Extend requires 720p
-          // Reset other media types
+          prompt: '',
+          inputVideo: videoFile,
+          inputVideoObject: lastVideoObject,
+          resolution: Resolution.P720,
           startFrame: null,
           endFrame: null,
           referenceImages: [],
           styleImage: null,
           isLooping: false,
-          // Reset audio specific
           voiceName: undefined,
-          // Default to MP4 if not set
           outputFormat: lastConfig.outputFormat || OutputFormat.MP4,
-          audioFile: lastConfig.audioFile || null, // Keep the music if extending
+          audioFile: lastConfig.audioFile || null,
+          durationSeconds: lastConfig.durationSeconds ? Math.min(Math.max(lastConfig.durationSeconds, 4), 8) : 5,
         });
 
         setAppState(AppState.IDLE);
@@ -260,31 +188,21 @@ const App: React.FC = () => {
         setErrorMessage(null);
       } catch (error) {
         console.error('Failed to process video for extension:', error);
-        const message =
-          error instanceof Error ? error.message : 'An unknown error occurred.';
-        showStatusError(`Falha ao preparar vídeo para extensão: ${message}`);
+        showStatusError('Falha ao preparar vídeo para extensão.');
       }
     }
   }, [lastConfig, lastVideoBlob, lastVideoObject]);
 
   const renderError = (message: string) => (
-    <div className="text-center bg-red-900/20 border border-red-500 p-8 rounded-lg max-w-2xl shadow-2xl">
-      <h2 className="text-2xl font-bold text-red-400 mb-4">Erro na Geração</h2>
+    <div className="text-center bg-red-900/20 border border-red-500 p-8 rounded-lg max-w-2xl shadow-2xl mx-auto my-8">
+      <h2 className="text-2xl font-bold text-red-400 mb-4">Erro na Criação</h2>
       <p className="text-red-200 mb-6 text-lg leading-relaxed">{message}</p>
-      
       <div className="flex flex-wrap items-center justify-center gap-4">
         <button
-          onClick={handleSwitchKey}
-          className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors border border-gray-600 shadow-sm"
+          onClick={() => handleGenerate(lastConfig!)}
+          className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors shadow-lg"
         >
-          Trocar Chave de API
-        </button>
-        
-        <button
-          onClick={handleTryAgainFromError}
-          className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors shadow-lg shadow-indigo-500/30"
-        >
-          Voltar e Tentar Novamente
+          Tentar Novamente
         </button>
       </div>
     </div>
@@ -293,38 +211,53 @@ const App: React.FC = () => {
   const isAudioResult = lastConfig?.mode === GenerationMode.TEXT_TO_AUDIO || lastConfig?.mode === GenerationMode.TEXT_TO_SPEECH;
 
   return (
-    <div className="h-screen bg-black text-gray-200 flex flex-col font-sans overflow-hidden">
-      {showApiKeyDialog && (
-        <ApiKeyDialog onContinue={handleApiKeyDialogContinue} />
-      )}
+    <div className="min-h-screen bg-black text-gray-200 flex flex-col font-sans">
       {showToolsDialog && (
         <ExternalToolsDialog onClose={() => setShowToolsDialog(false)} />
       )}
-      <header className="py-6 flex justify-between items-center px-8 relative z-10 flex-shrink-0 max-w-6xl mx-auto w-full">
-        <div className="w-12"></div> {/* Spacer to balance layout */}
-        <h1 className="text-5xl font-semibold tracking-wide text-center bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-          Veo Studio
+      <Tutorial 
+        steps={TUTORIAL_STEPS}
+        isActive={showTutorial && !showToolsDialog}
+        onComplete={handleTutorialComplete}
+        onSkip={handleTutorialComplete}
+      />
+      
+      {/* Free Mode Banner */}
+      <div className="bg-emerald-800/80 text-emerald-100 px-4 py-2 text-center text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 relative z-50">
+        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        Modo Gratuito Ativo: Usando Pollinations.ai & Banco de Dados Open Source
+      </div>
+
+      <header className="py-6 flex justify-between items-center px-8 relative z-30 max-w-6xl mx-auto w-full">
+        <div className="w-24 flex items-center gap-2">
+          <button 
+            onClick={() => setShowTutorial(true)}
+            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition-colors"
+            title="Iniciar Tutorial"
+          >
+            <CircleHelpIcon className="w-5 h-5" />
+          </button>
+        </div>
+        <h1 className="text-5xl font-semibold tracking-wide text-center bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500 bg-clip-text text-transparent">
+          Open Studio
         </h1>
         <button
           onClick={() => setShowToolsDialog(true)}
           className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 hover:border-indigo-500 transition-all text-xs font-medium text-gray-300 hover:text-white"
-          title="Ferramentas para criar vídeos longos"
         >
           <WrenchIcon className="w-4 h-4" />
           <span className="hidden sm:inline">Ferramentas de Edição</span>
         </button>
       </header>
-      <main className="w-full max-w-4xl mx-auto flex-grow flex flex-col overflow-hidden relative">
+      
+      <main className="w-full max-w-4xl mx-auto flex-grow flex flex-col relative">
         {appState === AppState.IDLE ? (
           <>
-            <div className="flex-grow overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-              {/* Template Library replacing the placeholder */}
+            <div className="flex-grow p-4">
               <div className="flex flex-col items-center w-full pb-6">
                 <div className="w-full">
                   <TemplateLibrary onSelect={handleTemplateSelect} />
                 </div>
-
-                {/* Arrow pointing down to form if space permits, or just rely on flow */}
                 {!initialFormValues && (
                   <div className="mt-8 text-center opacity-40 hidden md:block">
                     <p className="text-sm text-gray-500 mb-2">
@@ -335,7 +268,8 @@ const App: React.FC = () => {
                 )}
               </div>
             </div>
-            <div className="flex-shrink-0 p-4 bg-black/95 border-t border-gray-800 z-20">
+            
+            <div className="w-full p-4 bg-black border-t border-gray-800 z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
               <PromptForm
                 onGenerate={handleGenerate}
                 initialValues={initialFormValues}
@@ -343,7 +277,7 @@ const App: React.FC = () => {
             </div>
           </>
         ) : (
-          <div className="flex-grow flex items-center justify-center p-4 overflow-y-auto">
+          <div className="flex-grow flex items-center justify-center p-4 min-h-[60vh]">
             {appState === AppState.LOADING && <LoadingIndicator />}
             {appState === AppState.SUCCESS && videoUrl && (
               <VideoResult
@@ -352,20 +286,15 @@ const App: React.FC = () => {
                 onRetry={handleRetry}
                 onNewVideo={handleNewVideo}
                 onExtend={handleExtend}
-                canExtend={lastConfig?.resolution === Resolution.P720}
+                canExtend={false} // Extensions disabled in free mode for simplicity
                 isImage={lastConfig?.mode === GenerationMode.TEXT_TO_IMAGE}
                 isAudio={isAudioResult}
-                is1080p={lastConfig?.resolution === Resolution.P1080}
+                is1080p={false}
+                prompt={lastConfig?.prompt}
               />
             )}
-            {appState === AppState.SUCCESS &&
-              !videoUrl &&
-              renderError(
-                'Vídeo gerado, mas a URL está faltando. Por favor, tente novamente.',
-              )}
-            {appState === AppState.ERROR &&
-              errorMessage &&
-              renderError(errorMessage)}
+            {appState === AppState.SUCCESS && !videoUrl && renderError('Erro ao recuperar conteúdo.')}
+            {appState === AppState.ERROR && errorMessage && renderError(errorMessage)}
           </div>
         )}
       </main>

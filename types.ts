@@ -33,11 +33,13 @@ export enum Resolution {
 export enum OutputFormat {
   MP4 = 'mp4',
   MOV = 'mov',
+  JPEG = 'jpeg',
+  PNG = 'png',
 }
 
 export enum GenerationMode {
   TEXT_TO_VIDEO = 'Texto para Vídeo',
-  TEXT_TO_IMAGE = 'Texto para Imagem',
+  TEXT_TO_IMAGE = 'Texto para Imagem Estática',
   TEXT_TO_AUDIO = 'Texto para Música',
   TEXT_TO_SPEECH = 'Texto para Narração',
   FRAMES_TO_VIDEO = 'Quadros para Vídeo',
@@ -72,4 +74,5 @@ export interface GenerateVideoParams {
   inputVideoObject?: Video | null;
   isLooping?: boolean;
   audioFile?: File | null;
+  useMock?: boolean; // Flag para modo de teste gratuito
 }

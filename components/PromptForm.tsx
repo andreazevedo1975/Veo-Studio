@@ -16,10 +16,12 @@ import {
   VideoFile,
 } from '../types';
 import {
+  AlertTriangleIcon,
   ArrowRightIcon,
   AudioLinesIcon,
   ChevronDownIcon,
   ClockIcon,
+  FileImageIcon,
   FileVideoIcon,
   FilmIcon,
   FramesModeIcon,
@@ -30,6 +32,7 @@ import {
   PlusIcon,
   RectangleStackIcon,
   ReferencesModeIcon,
+  RepeatIcon,
   SlidersHorizontalIcon,
   SparklesIcon,
   TextModeIcon,
@@ -118,19 +121,27 @@ const ImageUpload: React.FC<{
   onRemove?: () => void;
   image?: ImageFile | null;
   label: React.ReactNode;
-}> = ({onSelect, onRemove, image, label}) => {
+  className?: string;
+}> = ({onSelect, onRemove, image, label, className = "w-28 h-20"}) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const processFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) return;
+    if (!file.type.startsWith('image/')) {
+      setErrorMessage('Apenas Imagens');
+      setTimeout(() => setErrorMessage(null), 2000);
+      return;
+    }
     setIsLoading(true);
+    setErrorMessage(null);
     try {
       const imageFile = await fileToImageFile(file);
       onSelect(imageFile);
     } catch (error) {
       console.error('Error converting file:', error);
+      setErrorMessage('Erro no envio');
     } finally {
       setIsLoading(false);
     }
@@ -146,7 +157,7 @@ const ImageUpload: React.FC<{
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(true);
+    if (!isLoading) setIsDragging(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -157,58 +168,83 @@ const ImageUpload: React.FC<{
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
+    if (isLoading) return;
+    
     const file = e.dataTransfer.files?.[0];
     if (file) {
       await processFile(file);
     }
   };
+  
+  return (
+    <div className={`relative group ${className}`}>
+      <button
+        type="button"
+        onClick={() => !isLoading && inputRef.current?.click()}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        disabled={isLoading}
+        className={`w-full h-full rounded-lg flex flex-col items-center justify-center transition-all duration-200 relative overflow-hidden
+          ${
+            errorMessage 
+              ? 'bg-red-900/20 border-2 border-red-500' 
+              : isLoading
+                ? 'bg-gray-900 border-2 border-indigo-500 cursor-wait'
+                : isDragging
+                  ? 'bg-indigo-600/20 border-2 border-indigo-500 text-indigo-400 scale-[1.02]'
+                  : image 
+                    ? 'border border-gray-600 hover:border-gray-400' 
+                    : 'bg-gray-700/30 hover:bg-gray-700/50 border-2 border-dashed border-gray-600 text-gray-400 hover:text-white'
+          }
+        `}
+      >
+        {image ? (
+          <>
+            <img
+              src={URL.createObjectURL(image.file)}
+              alt="preview"
+              className={`w-full h-full object-cover transition-opacity ${isLoading ? 'opacity-50' : 'opacity-100'}`}
+            />
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+               {isLoading ? (
+                 <LoaderIcon className="w-6 h-6 animate-spin text-white" />
+               ) : (
+                 <span className="text-xs text-white font-medium">Trocar</span>
+               )}
+            </div>
+          </>
+        ) : (
+          <>
+            {isLoading ? (
+              <LoaderIcon className="w-6 h-6 animate-spin text-indigo-400" />
+            ) : errorMessage ? (
+              <AlertTriangleIcon className="w-6 h-6 text-red-500" />
+            ) : isDragging ? (
+              <UploadCloudIcon className="w-6 h-6 animate-bounce" />
+            ) : (
+              <PlusIcon className="w-6 h-6" />
+            )}
+            <span className={`text-[10px] mt-1 font-medium px-1 truncate max-w-full ${errorMessage ? 'text-red-400' : isLoading ? 'text-indigo-300' : ''}`}>
+              {errorMessage || (isLoading ? 'Carregando...' : isDragging ? 'Solte aqui' : label)}
+            </span>
+          </>
+        )}
+      </button>
 
-  if (image) {
-    return (
-      <div className="relative w-28 h-20 group">
-        <img
-          src={URL.createObjectURL(image.file)}
-          alt="preview"
-          className="w-full h-full object-cover rounded-lg border border-gray-600"
-        />
+      {image && !isLoading && onRemove && (
         <button
           type="button"
-          onClick={onRemove}
-          className="absolute top-1 right-1 w-6 h-6 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-900 border border-gray-600 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-600 hover:border-red-600 transition-all shadow-md z-10"
           aria-label="Remover imagem">
-          <XMarkIcon className="w-4 h-4" />
+          <XMarkIcon className="w-3 h-3" />
         </button>
-      </div>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={() => !isLoading && inputRef.current?.click()}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      disabled={isLoading}
-      className={`w-28 h-20 rounded-lg flex flex-col items-center justify-center transition-all duration-200 relative overflow-hidden
-        ${
-          isLoading
-            ? 'bg-gray-800 border-2 border-indigo-500/50 cursor-wait'
-            : isDragging
-            ? 'bg-indigo-600/20 border-2 border-indigo-500 text-indigo-400 scale-105'
-            : 'bg-gray-700/30 hover:bg-gray-700/50 border-2 border-dashed border-gray-600 text-gray-400 hover:text-white'
-        }
-      `}>
-      {isLoading ? (
-        <LoaderIcon className="w-6 h-6 animate-spin text-indigo-400" />
-      ) : isDragging ? (
-        <UploadCloudIcon className="w-6 h-6 animate-bounce" />
-      ) : (
-        <PlusIcon className="w-6 h-6" />
       )}
-      <span className="text-[10px] mt-1 font-medium px-2 truncate max-w-full">
-        {isLoading ? 'Processando...' : isDragging ? 'Solte aqui' : label}
-      </span>
+
       <input
         type="file"
         ref={inputRef}
@@ -216,7 +252,7 @@ const ImageUpload: React.FC<{
         accept="image/*"
         className="hidden"
       />
-    </button>
+    </div>
   );
 };
 
@@ -229,15 +265,22 @@ const VideoUpload: React.FC<{
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const processFile = async (file: File) => {
-    if (!file.type.startsWith('video/')) return;
+    if (!file.type.startsWith('video/')) {
+       setErrorMessage('Apenas Vídeo');
+       setTimeout(() => setErrorMessage(null), 2000);
+       return;
+    }
     setIsLoading(true);
+    setErrorMessage(null);
     try {
       const videoFile = await fileToVideoFile(file);
       onSelect(videoFile);
     } catch (error) {
       console.error('Error converting file:', error);
+      setErrorMessage('Erro no vídeo');
     } finally {
       setIsLoading(false);
     }
@@ -253,7 +296,7 @@ const VideoUpload: React.FC<{
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(true);
+    if(!isLoading) setIsDragging(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -264,59 +307,87 @@ const VideoUpload: React.FC<{
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
+    if(isLoading) return;
+
     const file = e.dataTransfer.files?.[0];
     if (file) {
       await processFile(file);
     }
   };
 
-  if (video) {
-    return (
-      <div className="relative w-48 h-28 group">
-        <video
-          src={URL.createObjectURL(video.file)}
-          muted
-          loop
-          className="w-full h-full object-cover rounded-lg border border-gray-600"
-        />
+  return (
+    <div className="relative group w-full max-w-xs mx-auto">
+      <button
+        type="button"
+        onClick={() => !isLoading && inputRef.current?.click()}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        disabled={isLoading}
+        className={`w-full h-32 rounded-lg flex flex-col items-center justify-center transition-all duration-200 relative overflow-hidden text-center
+          ${
+            errorMessage
+              ? 'bg-red-900/20 border-2 border-red-500'
+              : isLoading
+                ? 'bg-gray-900 border-2 border-indigo-500 cursor-wait'
+                : isDragging
+                  ? 'bg-indigo-600/20 border-2 border-indigo-500 text-indigo-400 scale-[1.02]'
+                  : video
+                    ? 'border border-gray-600 hover:border-gray-400'
+                    : 'bg-gray-700/30 hover:bg-gray-700/50 border-2 border-dashed border-gray-600 text-gray-400 hover:text-white'
+          }
+        `}
+      >
+         {video ? (
+          <>
+            <video
+              src={URL.createObjectURL(video.file)}
+              muted
+              loop
+              className={`w-full h-full object-cover rounded-lg ${isLoading ? 'opacity-50' : ''}`}
+            />
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+               {isLoading ? (
+                 <LoaderIcon className="w-8 h-8 animate-spin text-white" />
+               ) : (
+                 <div className="flex flex-col items-center">
+                    <FileVideoIcon className="w-6 h-6 text-white mb-1" />
+                    <span className="text-xs text-white font-medium">Trocar Vídeo</span>
+                 </div>
+               )}
+            </div>
+          </>
+        ) : (
+          <>
+            {isLoading ? (
+              <LoaderIcon className="w-8 h-8 animate-spin text-indigo-400 mb-2" />
+            ) : errorMessage ? (
+              <AlertTriangleIcon className="w-8 h-8 text-red-500 mb-2" />
+            ) : isDragging ? (
+              <UploadCloudIcon className="w-8 h-8 animate-bounce mb-2" />
+            ) : (
+              <PlusIcon className="w-8 h-8 mb-2" />
+            )}
+            <span className={`text-xs px-2 font-medium ${errorMessage ? 'text-red-400' : isLoading ? 'text-indigo-300' : ''}`}>
+              {errorMessage || (isLoading ? 'Processando...' : isDragging ? 'Solte o vídeo aqui' : label)}
+            </span>
+          </>
+        )}
+      </button>
+
+      {video && !isLoading && onRemove && (
         <button
           type="button"
-          onClick={onRemove}
-          className="absolute top-1 right-1 w-6 h-6 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="absolute -top-2 -right-2 w-6 h-6 bg-gray-900 border border-gray-600 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-600 hover:border-red-600 transition-all shadow-md z-10"
           aria-label="Remover vídeo">
           <XMarkIcon className="w-4 h-4" />
         </button>
-      </div>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={() => !isLoading && inputRef.current?.click()}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      disabled={isLoading}
-      className={`w-48 h-28 rounded-lg flex flex-col items-center justify-center transition-all duration-200 relative overflow-hidden text-center
-        ${
-          isLoading
-            ? 'bg-gray-800 border-2 border-indigo-500/50 cursor-wait'
-            : isDragging
-            ? 'bg-indigo-600/20 border-2 border-indigo-500 text-indigo-400 scale-105'
-            : 'bg-gray-700/30 hover:bg-gray-700/50 border-2 border-dashed border-gray-600 text-gray-400 hover:text-white'
-        }
-      `}>
-      {isLoading ? (
-        <LoaderIcon className="w-6 h-6 animate-spin text-indigo-400 mb-1" />
-      ) : isDragging ? (
-        <UploadCloudIcon className="w-6 h-6 animate-bounce mb-1" />
-      ) : (
-        <PlusIcon className="w-6 h-6 mb-1" />
       )}
-      <span className="text-[10px] px-2 font-medium">
-        {isLoading ? 'Processando...' : isDragging ? 'Solte o vídeo' : label}
-      </span>
+
       <input
         type="file"
         ref={inputRef}
@@ -324,7 +395,7 @@ const VideoUpload: React.FC<{
         accept="video/*"
         className="hidden"
       />
-    </button>
+    </div>
   );
 };
 
@@ -337,7 +408,9 @@ const PromptForm: React.FC<PromptFormProps> = ({
   onGenerate,
   initialValues,
 }) => {
-  const [prompt, setPrompt] = useState(initialValues?.prompt ?? '');
+  const [prompt, setPrompt] = useState(
+    initialValues?.prompt ?? 'A character video, maintain visual consistency with reference images and style.'
+  );
   const [model, setModel] = useState<VeoModel>(
     initialValues?.model ?? VeoModel.VEO_FAST,
   );
@@ -351,11 +424,13 @@ const PromptForm: React.FC<PromptFormProps> = ({
     initialValues?.outputFormat ?? OutputFormat.MP4,
   );
   const [generationMode, setGenerationMode] = useState<GenerationMode>(
-    initialValues?.mode ?? GenerationMode.TEXT_TO_VIDEO,
+    initialValues?.mode ?? GenerationMode.REFERENCES_TO_VIDEO,
   );
-  const [durationSeconds, setDurationSeconds] = useState<number>(
-    initialValues?.durationSeconds ?? 5,
-  );
+  const [durationSeconds, setDurationSeconds] = useState<number>(() => {
+    const val = initialValues?.durationSeconds ?? 5;
+    return Math.max(val, 4);
+  });
+
   const [voiceName, setVoiceName] = useState<string>(
     initialValues?.voiceName ?? 'Puck',
   );
@@ -388,7 +463,6 @@ const PromptForm: React.FC<PromptFormProps> = ({
   const modeSelectorRef = useRef<HTMLDivElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync state with initialValues prop when it changes (e.g., for "Extend" or "Try Again")
   useEffect(() => {
     if (initialValues) {
       setPrompt(initialValues.prompt ?? '');
@@ -396,8 +470,12 @@ const PromptForm: React.FC<PromptFormProps> = ({
       setAspectRatio(initialValues.aspectRatio ?? AspectRatio.LANDSCAPE);
       setResolution(initialValues.resolution ?? Resolution.P720);
       setOutputFormat(initialValues.outputFormat ?? OutputFormat.MP4);
-      setGenerationMode(initialValues.mode ?? GenerationMode.TEXT_TO_VIDEO);
-      setDurationSeconds(initialValues.durationSeconds ?? 5);
+      setGenerationMode(initialValues.mode ?? GenerationMode.REFERENCES_TO_VIDEO);
+      
+      const rawDuration = initialValues.durationSeconds ?? 5;
+      const clampedDuration = Math.max(rawDuration, 4);
+      setDurationSeconds(clampedDuration);
+
       setVoiceName(initialValues.voiceName ?? 'Puck');
       setStartFrame(initialValues.startFrame ?? null);
       setEndFrame(initialValues.endFrame ?? null);
@@ -409,16 +487,6 @@ const PromptForm: React.FC<PromptFormProps> = ({
       setAudioFile(initialValues.audioFile ?? null);
     }
   }, [initialValues]);
-
-  useEffect(() => {
-    if (generationMode === GenerationMode.REFERENCES_TO_VIDEO) {
-      setModel(VeoModel.VEO);
-      setAspectRatio(AspectRatio.LANDSCAPE);
-      setResolution(Resolution.P720);
-    } else if (generationMode === GenerationMode.EXTEND_VIDEO) {
-      setResolution(Resolution.P720);
-    }
-  }, [generationMode]);
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -441,9 +509,17 @@ const PromptForm: React.FC<PromptFormProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const handleDurationBlur = () => {
+    let d = durationSeconds;
+    if (d < 4) d = 4;
+    setDurationSeconds(d);
+  };
+
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
+      const finalDuration = Math.max(durationSeconds, 4);
+
       onGenerate({
         prompt,
         model,
@@ -451,7 +527,7 @@ const PromptForm: React.FC<PromptFormProps> = ({
         resolution,
         outputFormat,
         mode: generationMode,
-        durationSeconds,
+        durationSeconds: finalDuration,
         voiceName,
         startFrame,
         endFrame,
@@ -487,7 +563,6 @@ const PromptForm: React.FC<PromptFormProps> = ({
   const handleSelectMode = (mode: GenerationMode) => {
     setGenerationMode(mode);
     setIsModeSelectorOpen(false);
-    // Reset media when mode changes to avoid confusion
     setStartFrame(null);
     setEndFrame(null);
     setReferenceImages([]);
@@ -495,18 +570,36 @@ const PromptForm: React.FC<PromptFormProps> = ({
     setInputVideo(null);
     setInputVideoObject(null);
     setIsLooping(false);
+
+    if (mode === GenerationMode.TEXT_TO_AUDIO) {
+      setDurationSeconds(30);
+      if (!prompt.trim()) {
+        setPrompt("Música ambiente relaxante, sons da natureza");
+      }
+    } else if (mode === GenerationMode.TEXT_TO_IMAGE) {
+      setOutputFormat(OutputFormat.JPEG);
+    } else if (mode === GenerationMode.REFERENCES_TO_VIDEO) {
+      if (!prompt.trim()) {
+        setPrompt('A character video, maintain visual consistency with reference images and style.');
+      }
+    } else {
+      if (durationSeconds === 30) {
+        setDurationSeconds(5);
+      }
+      if (outputFormat === OutputFormat.JPEG || outputFormat === OutputFormat.PNG) {
+        setOutputFormat(OutputFormat.MP4);
+      }
+    }
   };
 
   const promptPlaceholder = {
-    [GenerationMode.TEXT_TO_VIDEO]: 'Descreva o vídeo que você deseja criar...',
-    [GenerationMode.TEXT_TO_IMAGE]: 'Descreva a imagem que você deseja criar...',
-    [GenerationMode.TEXT_TO_AUDIO]: 'Descreva a música ou som que você deseja criar...',
-    [GenerationMode.TEXT_TO_SPEECH]: 'Digite o texto para ser narrado...',
-    [GenerationMode.FRAMES_TO_VIDEO]:
-      'Descreva o movimento entre os quadros (opcional)...',
-    [GenerationMode.REFERENCES_TO_VIDEO]:
-      'Descreva o vídeo combinando as referências visuais...',
-    [GenerationMode.EXTEND_VIDEO]: 'Descreva o que acontece em seguida (opcional)...',
+    [GenerationMode.TEXT_TO_VIDEO]: 'Descreva o vídeo (Ex: praia tropical)...',
+    [GenerationMode.TEXT_TO_IMAGE]: 'Descreva a imagem (Ex: astronauta no espaço)...',
+    [GenerationMode.TEXT_TO_AUDIO]: 'Descreva o tipo de música...',
+    [GenerationMode.TEXT_TO_SPEECH]: 'Digite o texto para narração...',
+    [GenerationMode.FRAMES_TO_VIDEO]: 'Descreva o movimento...',
+    [GenerationMode.REFERENCES_TO_VIDEO]: 'Adicione referências e descreva a cena...',
+    [GenerationMode.EXTEND_VIDEO]: 'Descreva a continuação...',
   }[generationMode];
 
   const selectableModes = [
@@ -516,72 +609,65 @@ const PromptForm: React.FC<PromptFormProps> = ({
     GenerationMode.TEXT_TO_SPEECH,
     GenerationMode.FRAMES_TO_VIDEO,
     GenerationMode.REFERENCES_TO_VIDEO,
+    GenerationMode.EXTEND_VIDEO,
   ];
 
   const renderMediaUploads = () => {
     if (generationMode === GenerationMode.FRAMES_TO_VIDEO) {
       return (
-        <div className="mb-4 p-4 bg-[#2c2c2e] rounded-xl border border-gray-700 flex flex-col items-center justify-center gap-4">
-          <div className="flex flex-wrap items-center justify-center gap-6">
-            <ImageUpload
-              label="Quadro Inicial"
-              image={startFrame}
-              onSelect={setStartFrame}
-              onRemove={() => {
-                setStartFrame(null);
-                setIsLooping(false);
-              }}
-            />
-            {!isLooping && (
-              <ImageUpload
-                label="Quadro Final"
-                image={endFrame}
-                onSelect={setEndFrame}
-                onRemove={() => setEndFrame(null)}
-              />
-            )}
-          </div>
-          {startFrame && !endFrame && (
-            <div className="mt-1 flex items-center">
-              <input
-                id="loop-video-checkbox"
-                type="checkbox"
-                checked={isLooping}
-                onChange={(e) => setIsLooping(e.target.checked)}
-                className="w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 rounded focus:ring-indigo-500 focus:ring-offset-gray-800 cursor-pointer"
-              />
-              <label
-                htmlFor="loop-video-checkbox"
-                className="ml-2 text-sm font-medium text-gray-300 cursor-pointer">
-                Criar vídeo em loop
-              </label>
-            </div>
-          )}
+        <div className="mb-4 p-4 bg-[#2c2c2e] rounded-xl border border-gray-700 flex flex-col gap-4" id="tour-upload">
+           <div className="flex items-center justify-center gap-4 sm:gap-8">
+              <div className="flex flex-col items-center">
+                 <ImageUpload
+                  label="Quadro Inicial"
+                  image={startFrame}
+                  onSelect={setStartFrame}
+                  className="w-32 h-24"
+                  onRemove={() => {
+                    setStartFrame(null);
+                    setIsLooping(false);
+                  }}
+                />
+              </div>
+              <div className="h-[2px] w-8 bg-gray-700 rounded-full" />
+              <div className={`flex flex-col items-center transition-opacity ${isLooping ? 'opacity-30 pointer-events-none' : ''}`}>
+                 <ImageUpload
+                  label="Quadro Final"
+                  image={endFrame}
+                  onSelect={setEndFrame}
+                  className="w-32 h-24"
+                  onRemove={() => setEndFrame(null)}
+                />
+              </div>
+           </div>
         </div>
       );
     }
     if (generationMode === GenerationMode.REFERENCES_TO_VIDEO) {
       return (
-        <div className="mb-4 p-4 bg-[#2c2c2e] rounded-xl border border-gray-700">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Assets Section */}
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-gray-300 flex items-center gap-1">
-                  <RectangleStackIcon className="w-3 h-3" />
-                  Conteúdo (Personagens/Objetos)
-                </label>
-                <span className="text-[10px] px-1.5 py-0.5 bg-gray-800 rounded text-gray-400">
-                  {referenceImages.length} / 3
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {referenceImages.map((img, index) => (
+        <div className="mb-4 p-4 bg-[#2c2c2e] rounded-xl border border-gray-700" id="tour-upload">
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex-1 flex flex-col gap-3">
+              <label className="text-xs font-semibold text-gray-300 flex items-center gap-2">
+                <div className="p-1 bg-indigo-500/10 rounded">
+                   <RectangleStackIcon className="w-3.5 h-3.5 text-indigo-400" />
+                </div>
+                Imagens de Referência
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {[0, 1, 2].map((index) => (
                   <ImageUpload
                     key={`ref-${index}`}
-                    image={img}
-                    label=""
-                    onSelect={() => {}}
+                    image={referenceImages[index]}
+                    label={`Ref ${index + 1}`}
+                    className="w-full h-24 aspect-square"
+                    onSelect={(img) => {
+                       setReferenceImages(prev => {
+                          const newArr = [...prev];
+                          newArr[index] = img;
+                          return newArr;
+                       });
+                    }}
                     onRemove={() =>
                       setReferenceImages((imgs) =>
                         imgs.filter((_, i) => i !== index),
@@ -589,38 +675,7 @@ const PromptForm: React.FC<PromptFormProps> = ({
                     }
                   />
                 ))}
-                {referenceImages.length < 3 && (
-                  <ImageUpload
-                    label="Adicionar"
-                    onSelect={(img) =>
-                      setReferenceImages((imgs) => [...imgs, img])
-                    }
-                  />
-                )}
               </div>
-              <p className="text-[10px] text-gray-500 leading-tight">
-                Adicione imagens para definir a aparência dos elementos no
-                vídeo.
-              </p>
-            </div>
-
-            {/* Style Section */}
-            <div className="flex flex-col gap-2 md:border-l md:border-gray-700 md:pl-6">
-              <label className="text-xs font-semibold text-gray-300 flex items-center gap-1">
-                <SparklesIcon className="w-3 h-3" />
-                Estilo Visual (Separado)
-              </label>
-              <div>
-                <ImageUpload
-                  label="Imagem de Estilo"
-                  image={styleImage}
-                  onSelect={setStyleImage}
-                  onRemove={() => setStyleImage(null)}
-                />
-              </div>
-              <p className="text-[10px] text-gray-500 leading-tight">
-                Carregue uma imagem separada para influenciar a estética geral (iluminação, cores, estilo artístico) do vídeo gerado.
-              </p>
             </div>
           </div>
         </div>
@@ -628,15 +683,9 @@ const PromptForm: React.FC<PromptFormProps> = ({
     }
     if (generationMode === GenerationMode.EXTEND_VIDEO) {
       return (
-        <div className="mb-4 p-4 bg-[#2c2c2e] rounded-xl border border-gray-700 flex items-center justify-center gap-4">
+        <div className="mb-4 p-4 bg-[#2c2c2e] rounded-xl border border-gray-700 flex flex-col items-center justify-center gap-4" id="tour-upload">
           <VideoUpload
-            label={
-              <>
-                Vídeo de Entrada
-                <br />
-                (deve ser 720p gerado no Veo)
-              </>
-            }
+            label="Carregar Vídeo"
             video={inputVideo}
             onSelect={setInputVideo}
             onRemove={() => {
@@ -650,175 +699,82 @@ const PromptForm: React.FC<PromptFormProps> = ({
     return null;
   };
 
-  const isRefMode = generationMode === GenerationMode.REFERENCES_TO_VIDEO;
-  const isExtendMode = generationMode === GenerationMode.EXTEND_VIDEO;
-  const isImageMode = generationMode === GenerationMode.TEXT_TO_IMAGE;
   const isAudioMode = generationMode === GenerationMode.TEXT_TO_AUDIO;
   const isSpeechMode = generationMode === GenerationMode.TEXT_TO_SPEECH;
-
-  let isSubmitDisabled = false;
-  let tooltipText = '';
-
-  switch (generationMode) {
-    case GenerationMode.TEXT_TO_VIDEO:
-    case GenerationMode.TEXT_TO_IMAGE:
-    case GenerationMode.TEXT_TO_AUDIO:
-    case GenerationMode.TEXT_TO_SPEECH:
-      isSubmitDisabled = !prompt.trim();
-      if (isSubmitDisabled) {
-        tooltipText = 'Por favor, insira um prompt.';
-      }
-      break;
-    case GenerationMode.FRAMES_TO_VIDEO:
-      isSubmitDisabled = !startFrame;
-      if (isSubmitDisabled) {
-        tooltipText = 'Um quadro inicial é obrigatório.';
-      }
-      break;
-    case GenerationMode.REFERENCES_TO_VIDEO:
-      const hasNoRefs = referenceImages.length === 0;
-      const hasNoPrompt = !prompt.trim();
-      const hasNoImages = hasNoRefs && !styleImage;
-      
-      isSubmitDisabled = hasNoImages || hasNoPrompt;
-      
-      if (hasNoImages && hasNoPrompt) {
-        tooltipText = 'Adicione uma imagem de referência e insira um prompt.';
-      } else if (hasNoImages) {
-        tooltipText = 'Pelo menos uma imagem (Conteúdo ou Estilo) é necessária.';
-      } else if (hasNoPrompt) {
-        tooltipText = 'Por favor, insira um prompt.';
-      }
-      break;
-    case GenerationMode.EXTEND_VIDEO:
-      isSubmitDisabled = !inputVideoObject;
-      if (isSubmitDisabled) {
-        tooltipText =
-          'Um vídeo de entrada de uma geração anterior é necessário para estender.';
-      }
-      break;
-  }
+  const isImageMode = generationMode === GenerationMode.TEXT_TO_IMAGE;
 
   return (
     <div className="relative w-full">
       {isSettingsOpen && (
         <div className="absolute bottom-full left-0 right-0 mb-3 p-4 bg-[#2c2c2e] rounded-xl border border-gray-700 shadow-2xl z-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {isSpeechMode ? (
-              <CustomSelect
-                label="Voz"
-                value={voiceName}
-                onChange={(e) => setVoiceName(e.target.value)}
-                icon={<UserIcon className="w-5 h-5 text-gray-400" />}
-                disabled={false}>
-                {['Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr'].map((v) => (
-                  <option key={v} value={v}>
-                    {v}
-                  </option>
-                ))}
-              </CustomSelect>
-            ) : (
-              <CustomSelect
-                label="Modelo"
-                value={model}
-                onChange={(e) => setModel(e.target.value as VeoModel)}
-                icon={<SparklesIcon className="w-5 h-5 text-gray-400" />}
-                disabled={isRefMode || isImageMode || isAudioMode}>
-                {Object.values(VeoModel).map((modelValue) => (
-                  <option key={modelValue} value={modelValue}>
-                    {modelValue}
-                  </option>
-                ))}
-              </CustomSelect>
-            )}
-            
-            <CustomSelect
-              label="Proporção"
-              value={aspectRatio}
-              onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
-              icon={<RectangleStackIcon className="w-5 h-5 text-gray-400" />}
-              disabled={isRefMode || isExtendMode || isAudioMode || isSpeechMode}>
-              {Object.entries(aspectRatioDisplayNames).map(([key, name]) => (
-                <option key={key} value={key}>
-                  {name}
-                </option>
-              ))}
-            </CustomSelect>
-            <div>
-              <CustomSelect
-                label="Resolução"
-                value={resolution}
-                onChange={(e) => setResolution(e.target.value as Resolution)}
-                icon={<TvIcon className="w-5 h-5 text-gray-400" />}
-                disabled={isRefMode || isExtendMode || isImageMode || isAudioMode || isSpeechMode}>
-                <option value={Resolution.P720}>720p</option>
-                <option value={Resolution.P1080}>1080p</option>
-              </CustomSelect>
-              {resolution === Resolution.P1080 && !isImageMode && !isAudioMode && !isSpeechMode && (
-                <p className="text-xs text-yellow-400/80 mt-2">
-                  Vídeos em 1080p não podem ser estendidos.
-                </p>
-              )}
-            </div>
-             <CustomSelect
-              label="Formato de Saída"
-              value={outputFormat}
-              onChange={(e) => setOutputFormat(e.target.value as OutputFormat)}
-              icon={<FileVideoIcon className="w-5 h-5 text-gray-400" />}
-              disabled={isImageMode || isAudioMode || isSpeechMode}>
-              <option value={OutputFormat.MP4}>MP4</option>
-              <option value={OutputFormat.MOV}>MOV</option>
-            </CustomSelect>
-            <div className="flex flex-col">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+             {/* Simplified settings for free mode */}
+             <div>
               <label className="text-xs block mb-1.5 font-medium text-gray-400">
-                Duração (seg)
+                Formato
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <ClockIcon className="w-5 h-5 text-gray-400" />
-                </div>
-                <input
-                  type="number"
-                  value={durationSeconds}
-                  onChange={(e) => setDurationSeconds(Number(e.target.value))}
-                  min={4}
-                  max={8} // Enforcing API limit
-                  step={1}
-                  disabled={isRefMode || isExtendMode || isImageMode || isAudioMode || isSpeechMode}
-                  className="w-full bg-[#1f1f1f] border border-gray-600 rounded-lg pl-10 pr-3 py-2.5 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-700/50 disabled:border-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-gray-200"
-                />
-              </div>
-              <p className="text-[10px] text-gray-500 mt-1 leading-tight">
-                Max: 8s. Use "Estender" para vídeos mais longos.
-              </p>
-            </div>
+              <CustomSelect
+                label=""
+                value={outputFormat}
+                onChange={(e) => setOutputFormat(e.target.value as OutputFormat)}
+                icon={isImageMode ? <FileImageIcon className="w-4 h-4" /> : <FileVideoIcon className="w-4 h-4" />}
+                disabled={isAudioMode}>
+                {isImageMode ? (
+                  <>
+                    <option value={OutputFormat.JPEG}>JPEG</option>
+                    <option value={OutputFormat.PNG}>PNG</option>
+                  </>
+                ) : (
+                  <option value={OutputFormat.MP4}>MP4</option>
+                )}
+              </CustomSelect>
+             </div>
+
+             <div>
+               <label className="text-xs block mb-1.5 font-medium text-gray-400">
+                 Duração (s)
+               </label>
+               <div className="relative">
+                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                   <ClockIcon className={`w-4 h-4 ${durationSeconds > 8 ? 'text-amber-500' : 'text-gray-400'}`} />
+                 </div>
+                 <input
+                   type="number"
+                   min="4"
+                   value={durationSeconds}
+                   onChange={(e) => setDurationSeconds(parseInt(e.target.value) || 0)}
+                   onBlur={handleDurationBlur}
+                   disabled={isImageMode}
+                   className={`w-full bg-[#1f1f1f] border rounded-lg pl-10 pr-3 py-2.5 focus:ring-1 focus:ring-indigo-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${durationSeconds > 8 ? 'border-amber-500/50 text-amber-500' : 'border-gray-600 text-gray-200'}`}
+                 />
+               </div>
+               {durationSeconds > 8 && !isAudioMode && (
+                 <div className="absolute mt-2 p-3 bg-amber-900/40 border border-amber-500/30 rounded-lg backdrop-blur-md z-30 w-64 shadow-xl">
+                   <div className="flex items-start gap-2">
+                     <AlertTriangleIcon className="w-4 h-4 shrink-0 text-amber-500 mt-0.5" />
+                     <div>
+                       <p className="text-[11px] font-bold text-amber-400 mb-0.5">Aviso de Custo/Performance</p>
+                       <p className="text-[10px] text-amber-200/80 leading-relaxed">
+                         Vídeos acima de 8s podem demorar mais para processar e consumir mais créditos (se aplicável).
+                       </p>
+                     </div>
+                   </div>
+                 </div>
+               )}
+             </div>
           </div>
         </div>
       )}
       <form onSubmit={handleSubmit} className="w-full">
         {renderMediaUploads()}
-        {audioFile && (
-          <div className="mb-2 flex items-center w-max bg-[#1f1f1f] border border-indigo-500/50 rounded-lg px-3 py-1.5 text-xs text-gray-200">
-            <MusicIcon className="w-3.5 h-3.5 mr-2 text-indigo-400" />
-            <span className="max-w-[200px] truncate">{audioFile.name}</span>
-            <button
-              onClick={() => {
-                setAudioFile(null);
-                if (audioInputRef.current) audioInputRef.current.value = '';
-              }}
-              className="ml-2 p-0.5 hover:bg-gray-700 rounded-full"
-              aria-label="Remover áudio">
-              <XMarkIcon className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-        <div className="flex items-end gap-2 bg-[#1f1f1f] border border-gray-600 rounded-2xl p-2 shadow-lg focus-within:ring-2 focus-within:ring-indigo-500">
+        <div className="flex items-end gap-2 bg-[#1f1f1f] border border-gray-600 rounded-2xl p-2 shadow-lg focus-within:ring-2 focus-within:ring-emerald-500">
           <div className="relative" ref={modeSelectorRef}>
             <button
               type="button"
+              id="tour-modes"
               onClick={() => setIsModeSelectorOpen((prev) => !prev)}
               className="flex shrink-0 items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white transition-colors"
-              aria-label="Selecionar modo de geração">
+            >
               {modeIcons[generationMode]}
               <span className="font-medium text-sm whitespace-nowrap">
                 {generationMode}
@@ -831,7 +787,7 @@ const PromptForm: React.FC<PromptFormProps> = ({
                     key={mode}
                     type="button"
                     onClick={() => handleSelectMode(mode)}
-                    className={`w-full text-left flex items-center gap-3 p-3 hover:bg-indigo-600/50 ${generationMode === mode ? 'bg-indigo-600/30 text-white' : 'text-gray-300'}`}>
+                    className={`w-full text-left flex items-center gap-3 p-3 hover:bg-emerald-600/50 ${generationMode === mode ? 'bg-emerald-600/30 text-white' : 'text-gray-300'}`}>
                     {modeIcons[mode]}
                     <span>{mode}</span>
                   </button>
@@ -841,6 +797,7 @@ const PromptForm: React.FC<PromptFormProps> = ({
           </div>
           <textarea
             ref={textareaRef}
+            id="tour-prompt"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder={promptPlaceholder}
@@ -849,25 +806,7 @@ const PromptForm: React.FC<PromptFormProps> = ({
           />
           <button
             type="button"
-            onClick={() => audioInputRef.current?.click()}
-            className={`p-2.5 rounded-full hover:bg-gray-700 transition-colors ${audioFile ? 'bg-indigo-900/50 text-indigo-400' : 'text-gray-300'}`}
-            aria-label="Adicionar música de fundo"
-            disabled={isAudioMode || isSpeechMode}
-            title="Adicionar música de fundo">
-            <MusicIcon className="w-5 h-5" />
-          </button>
-          <input
-            type="file"
-            ref={audioInputRef}
-            onChange={(e) => {
-              if (e.target.files?.[0]) setAudioFile(e.target.files[0]);
-              e.target.value = '';
-            }}
-            accept="audio/*"
-            className="hidden"
-          />
-          <button
-            type="button"
+            id="tour-settings"
             onClick={() => setIsSettingsOpen((prev) => !prev)}
             className={`p-2.5 rounded-full hover:bg-gray-700 ${isSettingsOpen ? 'bg-gray-700 text-white' : 'text-gray-300'}`}
             aria-label="Alternar configurações">
@@ -876,31 +815,15 @@ const PromptForm: React.FC<PromptFormProps> = ({
           <div className="relative group">
             <button
               type="submit"
-              className="p-2.5 bg-indigo-600 rounded-full hover:bg-indigo-500 disabled:bg-gray-600 disabled:cursor-not-allowed"
-              aria-label="Gerar vídeo"
-              disabled={isSubmitDisabled}>
+              id="tour-generate"
+              className="p-2.5 bg-emerald-600 rounded-full hover:bg-emerald-500 disabled:bg-gray-600 disabled:cursor-not-allowed"
+              aria-label="Gerar vídeo">
               <ArrowRightIcon className="w-5 h-5 text-white" />
             </button>
-            {isSubmitDisabled && tooltipText && (
-              <div
-                role="tooltip"
-                className="absolute bottom-full right-0 mb-2 w-max max-w-xs px-3 py-1.5 bg-gray-900 border border-gray-700 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                {tooltipText}
-              </div>
-            )}
           </div>
         </div>
         <p className="text-xs text-gray-500 text-center mt-2 px-4">
-          O Veo é um modelo pago. Você será cobrado em seu projeto Cloud. Veja os{' '}
-          <a
-            href="https://ai.google.dev/gemini-api/docs/pricing#veo-3"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-indigo-400 hover:underline"
-          >
-            detalhes de preço
-          </a>
-          .
+          Ferramenta 100% gratuita usando Pollinations.ai e bancos de imagem open source.
         </p>
       </form>
     </div>

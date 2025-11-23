@@ -21,28 +21,28 @@ const ExternalToolsDialog: React.FC<ExternalToolsDialogProps> = ({ onClose }) =>
     {
       name: "CapCut",
       platform: "Mobile / PC",
-      description: "O editor mais popular e fácil de usar. Perfeito para unir vários clipes do Veo, adicionar transições e legendas automáticas.",
+      description: "Possui uma versão gratuita excelente. Perfeito para unir vários clipes, adicionar transições e legendas automáticas sem custo.",
       url: "https://www.capcut.com/",
       icon: <SmartphoneIcon className="w-5 h-5 text-blue-400" />
     },
     {
-      name: "Canva",
+      name: "Canva Grátis",
       platform: "Web / Mobile",
-      description: "Ideal para criar montagens rápidas sem instalar nada. Basta fazer upload dos seus clipes e arrastar para a linha do tempo.",
+      description: "O plano gratuito permite criar montagens rápidas e arrastar seus clipes para a linha do tempo sem instalar nada.",
       url: "https://www.canva.com/pt_br/criar/editor-video/",
       icon: <LaptopIcon className="w-5 h-5 text-purple-400" />
     },
     {
       name: "DaVinci Resolve",
       platform: "PC / Mac",
-      description: "A ferramenta profissional gratuita de Hollywood. Se você quer fazer correção de cor e edição complexa, esta é a escolha.",
+      description: "A versão 'Standard' é totalmente gratuita e profissional. Se você quer fazer correção de cor e edição complexa de graça, esta é a escolha.",
       url: "https://www.blackmagicdesign.com/br/products/davinciresolve",
       icon: <WrenchIcon className="w-5 h-5 text-orange-400" />
     },
     {
       name: "Clideo",
       platform: "Web",
-      description: "Ferramenta online focada exclusivamente em unir vídeos (Merge). Rápido e sem necessidade de login complexo.",
+      description: "Ferramenta online gratuita para tarefas simples como unir vídeos (Merge). Rápido e sem necessidade de login complexo.",
       url: "https://clideo.com/pt/merge-video",
       icon: <ExternalLinkIcon className="w-5 h-5 text-green-400" />
     }
@@ -51,15 +51,14 @@ const ExternalToolsDialog: React.FC<ExternalToolsDialogProps> = ({ onClose }) =>
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
       <div className="bg-[#1f1f1f] border border-gray-700 rounded-2xl shadow-2xl max-w-2xl w-full flex flex-col overflow-hidden max-h-[90vh]">
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700 bg-gray-800/50">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-600/20 rounded-lg">
               <WrenchIcon className="w-6 h-6 text-indigo-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Estúdio de Montagem (Externo)</h2>
-              <p className="text-xs text-gray-400 mt-1">Crie vídeos longos unindo seus clipes</p>
+              <h2 className="text-xl font-bold text-white">Estúdio de Montagem (Ferramentas Gratuitas)</h2>
+              <p className="text-xs text-gray-400 mt-1">Opções externas sem custo para finalizar seus vídeos</p>
             </div>
           </div>
           <button
@@ -70,13 +69,10 @@ const ExternalToolsDialog: React.FC<ExternalToolsDialogProps> = ({ onClose }) =>
           </button>
         </div>
 
-        {/* Content */}
         <div className="p-6 overflow-y-auto">
-          <div className="mb-6 p-4 bg-indigo-900/20 border border-indigo-500/30 rounded-lg">
-            <p className="text-sm text-indigo-200 leading-relaxed">
-              <strong>Dica Pro:</strong> O modelo Veo gera clipes de alta qualidade de até 8 segundos. 
-              Para criar filmes, videoclipes ou conteúdos longos, a melhor estratégia é gerar várias cenas 
-              aqui e uni-las usando ferramentas de edição dedicadas.
+          <div className="mb-6 p-4 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
+            <p className="text-sm text-emerald-200 leading-relaxed">
+              <strong>Foco em Custo Zero:</strong> Todas as ferramentas abaixo possuem versões gratuitas ("Free Tier") que permitem exportar vídeos sem marca d'água ou com limitações aceitáveis para projetos pessoais.
             </p>
           </div>
 
@@ -107,13 +103,12 @@ const ExternalToolsDialog: React.FC<ExternalToolsDialogProps> = ({ onClose }) =>
           </div>
         </div>
 
-        {/* Footer */}
         <div className="p-4 bg-gray-900/50 border-t border-gray-700 text-center">
           <button
             onClick={onClose}
             className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            Entendi, vou tentar!
+            Entendi, obrigado!
           </button>
         </div>
       </div>

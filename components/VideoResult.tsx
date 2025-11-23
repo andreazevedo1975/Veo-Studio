@@ -4,10 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 import React, {useEffect, useRef, useState} from 'react';
+import { generateVideoCaption } from '../services/geminiService';
 import {
   ArrowPathIcon,
   AudioLinesIcon,
+  CaptionsIcon,
   DownloadIcon,
+  LoaderIcon,
   MusicIcon,
   PlusIcon,
   SparklesIcon,
@@ -23,6 +26,7 @@ interface VideoResultProps {
   isImage?: boolean;
   isAudio?: boolean;
   is1080p?: boolean;
+  prompt?: string;
 }
 
 const VideoResult: React.FC<VideoResultProps> = ({
@@ -35,11 +39,13 @@ const VideoResult: React.FC<VideoResultProps> = ({
   isImage = false,
   isAudio = false,
   is1080p = false,
+  prompt,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
+  const [isGeneratingCaptions, setIsGeneratingCaptions] = useState(false);
 
   useEffect(() => {
     if (audioFile && !isImage && !isAudio) {
@@ -96,10 +102,36 @@ const VideoResult: React.FC<VideoResultProps> = ({
       prefix = 'gemini-audio';
     }
     
-    link.download = `${prefix}-creation-${Date.now()}.${extension}`;
+    // Sanitize prompt for filename
+    const safePrompt = prompt
+      ? prompt.substring(0, 30).replace(/[^a-z0-9]/gi, '-').toLowerCase()
+      : 'creation';
+
+    link.download = `${prefix}-${safePrompt}-${Date.now()}.${extension}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleAutoCaption = async () => {
+    if (!videoUrl || isGeneratingCaptions) return;
+    
+    try {
+      setIsGeneratingCaptions(true);
+      
+      // Fetch the blob from the Object URL
+      const response = await fetch(videoUrl);
+      const blob = await response.blob();
+      
+      const transcription = await generateVideoCaption(blob);
+      
+      setCaption(prev => prev ? `${prev}\n\n[Auto-Transcrição]: ${transcription}` : transcription);
+    } catch (error) {
+      console.error("Erro ao gerar legendas:", error);
+      setCaption(prev => `${prev}\n\n[Erro]: Não foi possível gerar legendas automaticamente.`);
+    } finally {
+      setIsGeneratingCaptions(false);
+    }
   };
 
   const renderContent = () => {
@@ -164,9 +196,27 @@ const VideoResult: React.FC<VideoResultProps> = ({
 
       {/* Caption Input */}
       <div className="w-full max-w-2xl">
-        <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2 block">
-          Legenda / Notas
-        </label>
+        <div className="flex justify-between items-end mb-2">
+           <label className="text-xs font-medium text-gray-500 uppercase tracking-wider block">
+             Legenda / Notas
+           </label>
+           
+           {!isImage && (
+             <button 
+               onClick={handleAutoCaption}
+               disabled={isGeneratingCaptions}
+               className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded transition-colors ${isGeneratingCaptions ? 'bg-gray-700 text-gray-400' : 'bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600/30'}`}
+               title="Usar IA para transcrever o áudio do vídeo"
+             >
+               {isGeneratingCaptions ? (
+                 <LoaderIcon className="w-3 h-3 animate-spin" />
+               ) : (
+                 <CaptionsIcon className="w-3 h-3" />
+               )}
+               {isGeneratingCaptions ? 'Transcrevendo...' : 'Gerar Legendas'}
+             </button>
+           )}
+        </div>
         <textarea
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
@@ -196,9 +246,9 @@ const VideoResult: React.FC<VideoResultProps> = ({
             <button
               onClick={canExtend ? onExtend : undefined}
               disabled={!canExtend}
-              className={`flex items-center gap-2 px-6 py-3 font-semibold rounded-lg transition-colors ${
+              className={`flex items-center gap-2 px-6 py-3 font-semibold rounded-lg transition-all duration-300 ease-out ${
                 canExtend
-                  ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                  ? 'bg-indigo-600 hover:bg-indigo-700 text-white hover:scale-105 hover:shadow-lg shadow-indigo-500/20 active:scale-95'
                   : 'bg-gray-700 text-gray-500 cursor-not-allowed'
               }`}>
               <SparklesIcon className="w-5 h-5" />

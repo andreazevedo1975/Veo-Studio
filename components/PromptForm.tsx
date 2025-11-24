@@ -1,4 +1,3 @@
-
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -21,7 +20,6 @@ import {
   AudioLinesIcon,
   ChevronDownIcon,
   ClockIcon,
-  FileImageIcon,
   FileVideoIcon,
   FilmIcon,
   FramesModeIcon,
@@ -29,11 +27,10 @@ import {
   ImagePlayIcon,
   LoaderIcon,
   MicIcon,
-  MusicIcon,
+  PaletteIcon,
   PlusIcon,
   RectangleStackIcon,
   ReferencesModeIcon,
-  RepeatIcon,
   SlidersHorizontalIcon,
   SparklesIcon,
   TextModeIcon,
@@ -48,18 +45,17 @@ const aspectRatioDisplayNames: Record<AspectRatio, string> = {
   [AspectRatio.PORTRAIT]: 'Retrato (9:16)',
 };
 
-const modeIcons: Record<GenerationMode, React.ReactNode> = {
-  [GenerationMode.TEXT_TO_VIDEO]: <TextModeIcon className="w-5 h-5" />,
-  [GenerationMode.IMAGE_TO_VIDEO]: <ImagePlayIcon className="w-5 h-5" />,
-  [GenerationMode.TEXT_TO_IMAGE]: <ImageIcon className="w-5 h-5" />,
-  [GenerationMode.TEXT_TO_AUDIO]: <AudioLinesIcon className="w-5 h-5" />,
-  [GenerationMode.TEXT_TO_SPEECH]: <MicIcon className="w-5 h-5" />,
-  [GenerationMode.FRAMES_TO_VIDEO]: <FramesModeIcon className="w-5 h-5" />,
-  [GenerationMode.REFERENCES_TO_VIDEO]: (
-    <ReferencesModeIcon className="w-5 h-5" />
-  ),
-  [GenerationMode.EXTEND_VIDEO]: <FilmIcon className="w-5 h-5" />,
-};
+// Configuração centralizada dos modos para as abas
+const MODE_TABS = [
+  { mode: GenerationMode.TEXT_TO_VIDEO, label: 'Texto', icon: <TextModeIcon className="w-4 h-4" /> },
+  { mode: GenerationMode.IMAGE_TO_VIDEO, label: 'Imagem', icon: <ImagePlayIcon className="w-4 h-4" /> },
+  { mode: GenerationMode.FRAMES_TO_VIDEO, label: 'Quadros', icon: <FramesModeIcon className="w-4 h-4" /> },
+  { mode: GenerationMode.REFERENCES_TO_VIDEO, label: 'Ref + Estilo', icon: <ReferencesModeIcon className="w-4 h-4" /> },
+  { mode: GenerationMode.EXTEND_VIDEO, label: 'Estender', icon: <FilmIcon className="w-4 h-4" /> },
+  { mode: GenerationMode.TEXT_TO_IMAGE, label: 'Img Estática', icon: <ImageIcon className="w-4 h-4" /> },
+  { mode: GenerationMode.TEXT_TO_AUDIO, label: 'Música', icon: <AudioLinesIcon className="w-4 h-4" /> },
+  { mode: GenerationMode.TEXT_TO_SPEECH, label: 'Narração', icon: <MicIcon className="w-4 h-4" /> },
+];
 
 const fileToBase64 = <T extends {file: File; base64: string}>(
   file: File,
@@ -469,10 +465,7 @@ const PromptForm: React.FC<PromptFormProps> = ({
   );
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isModeSelectorOpen, setIsModeSelectorOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const modeSelectorRef = useRef<HTMLDivElement>(null);
-  const audioInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (initialValues) {
@@ -507,19 +500,6 @@ const PromptForm: React.FC<PromptFormProps> = ({
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
   }, [prompt]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        modeSelectorRef.current &&
-        !modeSelectorRef.current.contains(event.target as Node)
-      ) {
-        setIsModeSelectorOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const handleDurationBlur = () => {
     let d = durationSeconds;
@@ -576,417 +556,289 @@ const PromptForm: React.FC<PromptFormProps> = ({
 
   const handleSelectMode = (mode: GenerationMode) => {
     setGenerationMode(mode);
-    setIsModeSelectorOpen(false);
-    setStartFrame(null);
-    setEndFrame(null);
-    setReferenceImages([]);
-    setStyleImage(null);
-    setSourceImage(null);
-    setInputVideo(null);
-    setInputVideoObject(null);
-    setIsLooping(false);
-
-    if (mode === GenerationMode.TEXT_TO_AUDIO) {
-      setDurationSeconds(30);
-      if (!prompt.trim()) {
-        setPrompt("Música ambiente relaxante, sons da natureza");
-      }
-    } else if (mode === GenerationMode.TEXT_TO_IMAGE) {
-      setOutputFormat(OutputFormat.JPEG);
-    } else if (mode === GenerationMode.REFERENCES_TO_VIDEO) {
-      if (!prompt.trim()) {
-        setPrompt('Um vídeo de personagem, mantenha a consistência visual com as imagens de referência e o estilo.');
-      }
-    } else if (mode === GenerationMode.IMAGE_TO_VIDEO) {
-      if (!prompt.trim()) {
-        setPrompt('Anime esta imagem suavemente, mantendo os detalhes e o estilo originais.');
-      }
-    } else {
-      if (durationSeconds === 30) {
-        setDurationSeconds(5);
-      }
-      if (outputFormat === OutputFormat.JPEG || outputFormat === OutputFormat.PNG) {
-        setOutputFormat(OutputFormat.MP4);
-      }
-    }
   };
-
-  const promptPlaceholder = {
-    [GenerationMode.TEXT_TO_VIDEO]: 'Descreva o vídeo (Ex: praia tropical)...',
-    [GenerationMode.IMAGE_TO_VIDEO]: 'Descreva como esta imagem deve ganhar vida...',
-    [GenerationMode.TEXT_TO_IMAGE]: 'Descreva a imagem (Ex: astronauta no espaço)...',
-    [GenerationMode.TEXT_TO_AUDIO]: 'Descreva o tipo de música...',
-    [GenerationMode.TEXT_TO_SPEECH]: 'Digite o texto para narração...',
-    [GenerationMode.FRAMES_TO_VIDEO]: 'Descreva o movimento...',
-    [GenerationMode.REFERENCES_TO_VIDEO]: 'Adicione referências e descreva a cena...',
-    [GenerationMode.EXTEND_VIDEO]: 'Descreva a continuação...',
-  }[generationMode];
-
-  const selectableModes = [
-    GenerationMode.TEXT_TO_VIDEO,
-    GenerationMode.IMAGE_TO_VIDEO,
-    GenerationMode.TEXT_TO_IMAGE,
-    GenerationMode.TEXT_TO_AUDIO,
-    GenerationMode.TEXT_TO_SPEECH,
-    GenerationMode.FRAMES_TO_VIDEO,
-    GenerationMode.REFERENCES_TO_VIDEO,
-    GenerationMode.EXTEND_VIDEO,
-  ];
-
-  const renderMediaUploads = () => {
-    if (generationMode === GenerationMode.IMAGE_TO_VIDEO) {
-      return (
-        <div className="mb-4 p-4 bg-[#2c2c2e] rounded-xl border border-gray-700 flex flex-col items-center justify-center gap-4" id="tour-upload">
-           <div className="flex flex-col items-center w-full max-w-md">
-             <label className="text-xs font-semibold text-gray-300 flex items-center gap-2 mb-3">
-                <div className="p-1 bg-indigo-500/10 rounded">
-                   <ImageIcon className="w-3.5 h-3.5 text-indigo-400" />
-                </div>
-                Imagem de Origem
-             </label>
-             <ImageUpload
-              label="Carregar Imagem para Animar"
-              image={sourceImage}
-              onSelect={setSourceImage}
-              className="w-full h-48"
-              onRemove={() => setSourceImage(null)}
-            />
-           </div>
-        </div>
-      );
-    }
-    if (generationMode === GenerationMode.FRAMES_TO_VIDEO) {
-      return (
-        <div className="mb-4 p-4 bg-[#2c2c2e] rounded-xl border border-gray-700 flex flex-col gap-4" id="tour-upload">
-           <div className="flex items-center justify-center gap-4 sm:gap-8">
-              <div className="flex flex-col items-center">
-                 <ImageUpload
-                  label="Quadro Inicial"
-                  image={startFrame}
-                  onSelect={setStartFrame}
-                  className="w-32 h-24"
-                  onRemove={() => {
-                    setStartFrame(null);
-                    setIsLooping(false);
-                  }}
-                />
-              </div>
-              <div className="h-[2px] w-8 bg-gray-700 rounded-full" />
-              <div className={`flex flex-col items-center transition-opacity ${isLooping ? 'opacity-30 pointer-events-none' : ''}`}>
-                 <ImageUpload
-                  label="Quadro Final"
-                  image={endFrame}
-                  onSelect={setEndFrame}
-                  className="w-32 h-24"
-                  onRemove={() => setEndFrame(null)}
-                />
-              </div>
-           </div>
-        </div>
-      );
-    }
-    if (generationMode === GenerationMode.REFERENCES_TO_VIDEO) {
-      return (
-        <div className="mb-4 p-4 bg-[#2c2c2e] rounded-xl border border-gray-700" id="tour-upload">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1 flex flex-col gap-3">
-              <label className="text-xs font-semibold text-gray-300 flex items-center gap-2">
-                <div className="p-1 bg-indigo-500/10 rounded">
-                   <RectangleStackIcon className="w-3.5 h-3.5 text-indigo-400" />
-                </div>
-                Imagens de Referência
-              </label>
-              <div className="grid grid-cols-3 gap-3">
-                {[0, 1, 2].map((index) => (
-                  <ImageUpload
-                    key={`ref-${index}`}
-                    image={referenceImages[index]}
-                    label={`Ref ${index + 1}`}
-                    className="w-full h-24 aspect-square"
-                    onSelect={(img) => {
-                       setReferenceImages(prev => {
-                          const newArr = [...prev];
-                          newArr[index] = img;
-                          return newArr;
-                       });
-                    }}
-                    onRemove={() =>
-                      setReferenceImages((imgs) =>
-                        imgs.filter((_, i) => i !== index),
-                      )
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="w-full md:w-32 flex flex-col gap-3">
-               <label className="text-xs font-semibold text-gray-300 flex items-center gap-2">
-                  <div className="p-1 bg-pink-500/10 rounded">
-                     <SparklesIcon className="w-3.5 h-3.5 text-pink-400" />
-                  </div>
-                  Estilo
-               </label>
-               <ImageUpload
-                  label="Imagem de Estilo"
-                  image={styleImage}
-                  onSelect={setStyleImage}
-                  className="w-full h-24"
-                  onRemove={() => setStyleImage(null)}
-                />
-            </div>
-          </div>
-        </div>
-      );
-    }
-    if (generationMode === GenerationMode.EXTEND_VIDEO) {
-      return (
-        <div className="mb-4 p-4 bg-[#2c2c2e] rounded-xl border border-gray-700 flex flex-col items-center justify-center gap-4" id="tour-upload">
-          <VideoUpload
-            label="Carregar Vídeo"
-            video={inputVideo}
-            onSelect={setInputVideo}
-            onRemove={() => {
-              setInputVideo(null);
-              setInputVideoObject(null);
-            }}
-          />
-           <div className="flex items-center gap-2 mt-2">
-              <input 
-                type="checkbox" 
-                id="loop-checkbox"
-                checked={isLooping}
-                onChange={(e) => setIsLooping(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-600 text-indigo-600 focus:ring-indigo-500 bg-[#1f1f1f]"
-              />
-              <label htmlFor="loop-checkbox" className="text-sm text-gray-300 cursor-pointer select-none flex items-center gap-2">
-                 <RepeatIcon className="w-4 h-4 text-gray-400" />
-                 Criar vídeo em loop
-              </label>
-           </div>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const isAudioMode = generationMode === GenerationMode.TEXT_TO_AUDIO;
-  const isSpeechMode = generationMode === GenerationMode.TEXT_TO_SPEECH;
-  const isImageMode = generationMode === GenerationMode.TEXT_TO_IMAGE;
 
   return (
-    <div className="relative w-full">
-      {isSettingsOpen && (
-        <div className="absolute bottom-full left-0 right-0 mb-3 p-4 bg-[#2c2c2e] rounded-xl border border-gray-700 shadow-2xl z-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-             {/* Simplified settings for free mode */}
-             <div>
-              <label className="text-xs block mb-1.5 font-medium text-gray-400">
-                Formato
-              </label>
-              <CustomSelect
-                label=""
-                value={outputFormat}
-                onChange={(e) => setOutputFormat(e.target.value as OutputFormat)}
-                icon={isImageMode ? <FileImageIcon className="w-4 h-4" /> : <FileVideoIcon className="w-4 h-4" />}
-                disabled={isAudioMode}>
-                {isImageMode ? (
-                  <>
-                    <option value={OutputFormat.JPEG}>JPEG</option>
-                    <option value={OutputFormat.PNG}>PNG</option>
-                  </>
-                ) : (
-                  <option value={OutputFormat.MP4}>MP4</option>
-                )}
-              </CustomSelect>
-             </div>
-
-             <div>
-               <label className="text-xs block mb-1.5 font-medium text-gray-400">
-                 Duração (s)
-               </label>
-               <div className="relative">
-                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                   <ClockIcon className={`w-4 h-4 ${durationSeconds > 8 ? 'text-amber-500' : 'text-gray-400'}`} />
-                 </div>
-                 <input
-                   type="number"
-                   min="4"
-                   value={durationSeconds}
-                   onChange={(e) => setDurationSeconds(parseInt(e.target.value) || 0)}
-                   onBlur={handleDurationBlur}
-                   disabled={isImageMode}
-                   className={`w-full bg-[#1f1f1f] border rounded-lg pl-10 pr-3 py-2.5 focus:ring-1 focus:ring-indigo-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${durationSeconds > 8 ? 'border-amber-500/50 text-amber-500' : 'border-gray-600 text-gray-200'}`}
-                 />
-               </div>
-               {durationSeconds > 8 && !isAudioMode && (
-                 <div className="absolute mt-2 p-3 bg-amber-900/40 border border-amber-500/30 rounded-lg backdrop-blur-md z-30 w-64 shadow-xl">
-                   <div className="flex items-start gap-2">
-                     <AlertTriangleIcon className="w-4 h-4 shrink-0 text-amber-500 mt-0.5" />
-                     <div>
-                       <p className="text-[11px] font-bold text-amber-400 mb-0.5">Aviso de Custo/Performance</p>
-                       <p className="text-sm text-amber-200/80 leading-relaxed">
-                         Vídeos acima de 8s podem demorar mais para processar e consumir mais créditos (se aplicável).
-                       </p>
-                     </div>
-                   </div>
-                 </div>
-               )}
-             </div>
-
-             {!isAudioMode && !isSpeechMode && !isImageMode && (
-               <div className="flex flex-col justify-end">
-                  <div className="flex items-center gap-2 h-[42px]">
-                    <input
-                      type="checkbox"
-                      id="loop-setting"
-                      checked={isLooping}
-                      onChange={(e) => setIsLooping(e.target.checked)}
-                      disabled={generationMode === GenerationMode.EXTEND_VIDEO}
-                      className="w-4 h-4 rounded border-gray-600 text-indigo-600 focus:ring-indigo-500 bg-[#1f1f1f]"
-                    />
-                    <label htmlFor="loop-setting" className={`text-xs font-medium cursor-pointer flex items-center gap-2 ${generationMode === GenerationMode.EXTEND_VIDEO ? 'text-gray-500' : 'text-gray-300'}`}>
-                      <RepeatIcon className="w-3.5 h-3.5" />
-                      Vídeo em Loop
-                    </label>
-                  </div>
-               </div>
-             )}
-
-             {isSpeechMode && (
-              <div>
-                <label className="text-xs block mb-1.5 font-medium text-gray-400">
-                  Voz
-                </label>
-                <div className="relative">
-                  <select
-                    value={voiceName}
-                    onChange={(e) => setVoiceName(e.target.value)}
-                    className="w-full bg-[#1f1f1f] border border-gray-600 rounded-lg pl-3 pr-8 py-2.5 appearance-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
-                    <option value="Puck">Puck (Masculina)</option>
-                    <option value="Charon">Charon (Masculina Profunda)</option>
-                    <option value="Kore">Kore (Feminina)</option>
-                    <option value="Fenrir">Fenrir (Masculina Intensa)</option>
-                    <option value="Zephyr">Zephyr (Feminina Suave)</option>
-                  </select>
-                  <ChevronDownIcon className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                </div>
-              </div>
-             )}
-             
-             {/* Background Music Upload Option (New) */}
-             {!isAudioMode && !isSpeechMode && (
-               <div className="lg:col-span-2">
-                 <label className="text-xs block mb-1.5 font-medium text-gray-400">
-                   Música de Fundo (MP3, WAV)
-                 </label>
-                 <div className="flex items-center gap-2">
-                   <button
-                    type="button"
-                    onClick={() => audioInputRef.current?.click()}
-                    className="flex-grow flex items-center justify-center gap-2 px-3 py-2.5 bg-[#1f1f1f] border border-gray-600 rounded-lg hover:bg-gray-800 hover:border-gray-500 transition-colors text-xs text-gray-300"
-                   >
-                     {audioFile ? (
-                       <>
-                        <MusicIcon className="w-3.5 h-3.5 text-green-400" />
-                        <span className="truncate max-w-[120px]">{audioFile.name}</span>
-                       </>
-                     ) : (
-                       <>
-                        <UploadCloudIcon className="w-3.5 h-3.5" />
-                        <span>Carregar Áudio</span>
-                       </>
-                     )}
-                   </button>
-                   {audioFile && (
-                     <button
-                       type="button"
-                       onClick={() => {
-                         setAudioFile(null);
-                         if (audioInputRef.current) audioInputRef.current.value = '';
-                       }}
-                       className="p-2.5 bg-gray-800 border border-gray-600 rounded-lg text-gray-400 hover:text-red-400 hover:border-red-400 transition-colors"
-                     >
-                       <XMarkIcon className="w-3.5 h-3.5" />
-                     </button>
-                   )}
-                 </div>
-                 <input
-                   type="file"
-                   ref={audioInputRef}
-                   onChange={(e) => {
-                     const file = e.target.files?.[0];
-                     if (file) setAudioFile(file);
-                   }}
-                   accept="audio/mpeg, audio/wav, audio/mp3, audio/aac, audio/*"
-                   className="hidden"
-                 />
-               </div>
-             )}
-          </div>
-        </div>
-      )}
-      <form onSubmit={handleSubmit} className="w-full">
-        {renderMediaUploads()}
-        <div className="flex items-end gap-2 bg-[#1f1f1f] border border-gray-600 rounded-2xl p-2 shadow-lg focus-within:ring-2 focus-within:ring-emerald-500">
-          <div className="relative" ref={modeSelectorRef}>
-            <button
-              type="button"
-              id="tour-modes"
-              onClick={() => setIsModeSelectorOpen((prev) => !prev)}
-              className="flex shrink-0 items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white transition-colors"
-            >
-              {modeIcons[generationMode]}
-              <span className="font-medium text-sm whitespace-nowrap">
-                {generationMode}
-              </span>
-            </button>
-            {isModeSelectorOpen && (
-              <div className="absolute bottom-full mb-2 w-60 bg-[#2c2c2e] border border-gray-600 rounded-lg shadow-xl overflow-hidden z-10">
-                {selectableModes.map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => handleSelectMode(mode)}
-                    className={`w-full text-left flex items-center gap-3 p-3 hover:bg-emerald-600/50 ${generationMode === mode ? 'bg-emerald-600/30 text-white' : 'text-gray-300'}`}>
-                    {modeIcons[mode]}
-                    <span>{mode}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <textarea
-            ref={textareaRef}
-            id="tour-prompt"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder={promptPlaceholder}
-            className="flex-grow bg-transparent focus:outline-none resize-none text-base text-gray-200 placeholder-gray-500 max-h-48 py-2"
-            rows={1}
-          />
+    <form onSubmit={handleSubmit} className="w-full max-w-4xl mx-auto space-y-6" id="tour-prompt">
+      <div className="flex flex-wrap gap-2 justify-center mb-6 bg-gray-900/50 p-2 rounded-xl border border-gray-800" id="tour-modes">
+        {MODE_TABS.map((tab) => (
           <button
+            key={tab.mode}
             type="button"
-            id="tour-settings"
-            onClick={() => setIsSettingsOpen((prev) => !prev)}
-            className={`p-2.5 rounded-full hover:bg-gray-700 ${isSettingsOpen ? 'bg-gray-700 text-white' : 'text-gray-300'}`}
-            aria-label="Alternar configurações">
-            <SlidersHorizontalIcon className="w-5 h-5" />
+            onClick={() => handleSelectMode(tab.mode)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              generationMode === tab.mode
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                : 'text-gray-400 hover:text-white hover:bg-gray-800'
+            }`}
+          >
+            {tab.icon}
+            {tab.label}
           </button>
-          <div className="relative group">
-            <button
-              type="submit"
-              id="tour-generate"
-              className="p-2.5 bg-emerald-600 rounded-full hover:bg-emerald-500 disabled:bg-gray-600 disabled:cursor-not-allowed"
-              aria-label="Gerar vídeo">
-              <ArrowRightIcon className="w-5 h-5 text-white" />
-            </button>
-          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="w-full md:w-1/3 flex flex-col gap-4">
+            {generationMode === GenerationMode.IMAGE_TO_VIDEO && (
+                <ImageUpload 
+                    label="Imagem de Origem" 
+                    image={sourceImage} 
+                    onSelect={setSourceImage} 
+                    onRemove={() => setSourceImage(null)}
+                    className="w-full h-40" 
+                />
+            )}
+
+             {generationMode === GenerationMode.FRAMES_TO_VIDEO && (
+                <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                        <ImageUpload label="Quadro Inicial" image={startFrame} onSelect={setStartFrame} onRemove={() => setStartFrame(null)} className="w-full h-32" />
+                    </div>
+                    <div className="text-gray-500">
+                        <ArrowRightIcon className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                        <ImageUpload label="Quadro Final" image={endFrame} onSelect={setEndFrame} onRemove={() => setEndFrame(null)} className="w-full h-32" />
+                    </div>
+                </div>
+            )}
+
+            {generationMode === GenerationMode.REFERENCES_TO_VIDEO && (
+                <div className="space-y-4">
+                     <div className="p-3 bg-gray-900/40 rounded-xl border border-gray-800">
+                        <div className="text-xs text-gray-400 font-medium mb-2 flex items-center gap-2">
+                            <UserIcon className="w-3 h-3" />
+                            Conteúdo (Personagens/Objetos)
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            {[0, 1].map((i) => (
+                                <ImageUpload
+                                    key={i}
+                                    label={`Referência ${i+1}`}
+                                    image={referenceImages[i]}
+                                    onSelect={(img) => {
+                                        const newRefs = [...referenceImages];
+                                        newRefs[i] = img;
+                                        setReferenceImages(newRefs);
+                                    }}
+                                    onRemove={() => {
+                                        const newRefs = [...referenceImages];
+                                        newRefs.splice(i, 1);
+                                        setReferenceImages(newRefs);
+                                    }}
+                                    className="w-full h-24"
+                                />
+                            ))}
+                        </div>
+                    </div>
+                    
+                    <div className="p-3 bg-gray-900/40 rounded-xl border border-gray-800">
+                        <div className="text-xs text-gray-400 font-medium mb-2 flex items-center gap-2">
+                            <PaletteIcon className="w-3 h-3" />
+                            Estilo Visual (Vibe/Cores)
+                        </div>
+                        <ImageUpload label="Referência de Estilo" image={styleImage} onSelect={setStyleImage} onRemove={() => setStyleImage(null)} className="w-full h-24" />
+                    </div>
+                </div>
+            )}
+
+            {generationMode === GenerationMode.EXTEND_VIDEO && (
+                <VideoUpload label="Vídeo para Estender" video={inputVideo} onSelect={setInputVideo} onRemove={() => setInputVideo(null)} />
+            )}
         </div>
-        <p className="text-xs text-gray-500 text-center mt-2 px-4">
-          Ferramenta 100% gratuita usando Pollinations.ai e bancos de imagem open source.
-        </p>
-      </form>
-    </div>
+
+        <div className="w-full md:w-2/3 space-y-4">
+            <div className="relative">
+                <textarea
+                    ref={textareaRef}
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="Descreva o que você quer criar em detalhes..."
+                    className="w-full bg-[#1f1f1f] border border-gray-700 rounded-xl p-4 text-gray-200 placeholder-gray-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all min-h-[120px] resize-none text-base leading-relaxed"
+                />
+                <div className="absolute bottom-3 right-3 flex gap-2">
+                    <button
+                        type="button"
+                        className="p-2 bg-gray-800 rounded-lg text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 transition-colors"
+                        title="Otimizar Prompt"
+                    >
+                        <SparklesIcon className="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+
+            <div className="border border-gray-800 rounded-xl overflow-hidden bg-[#1f1f1f]" id="tour-settings">
+                <button
+                    type="button"
+                    onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                    className="w-full flex items-center justify-between p-3 bg-gray-900/50 text-gray-400 hover:text-white transition-colors text-sm font-medium"
+                >
+                    <div className="flex items-center gap-2">
+                        <SlidersHorizontalIcon className="w-4 h-4" />
+                        Configurações Avançadas
+                    </div>
+                    <ChevronDownIcon className={`w-4 h-4 transition-transform ${isSettingsOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {isSettingsOpen && (
+                    <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-4 animate-in slide-in-from-top-2 duration-200">
+                        <CustomSelect
+                            label="Modelo"
+                            value={model}
+                            onChange={(e) => setModel(e.target.value as VeoModel)}
+                            icon={<SparklesIcon className="w-4 h-4 text-gray-400" />}
+                        >
+                            <option value={VeoModel.VEO_FAST}>Veo Fast (Rápido)</option>
+                            <option value={VeoModel.VEO}>Veo (Alta Qualidade)</option>
+                            <option value={VeoModel.IMAGEN}>Imagen 3 (Imagem)</option>
+                        </CustomSelect>
+
+                        <CustomSelect
+                            label="Proporção"
+                            value={aspectRatio}
+                            onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
+                            icon={<RectangleStackIcon className="w-4 h-4 text-gray-400" />}
+                        >
+                            {Object.entries(aspectRatioDisplayNames).map(([value, label]) => (
+                                <option key={value} value={value}>{label}</option>
+                            ))}
+                        </CustomSelect>
+
+                        <CustomSelect
+                            label="Resolução"
+                            value={resolution}
+                            onChange={(e) => setResolution(e.target.value as Resolution)}
+                            icon={<TvIcon className="w-4 h-4 text-gray-400" />}
+                        >
+                            <option value={Resolution.P720}>720p</option>
+                            <option value={Resolution.P1080}>1080p</option>
+                        </CustomSelect>
+
+                        <CustomSelect
+                            label="Formato"
+                            value={outputFormat}
+                            onChange={(e) => setOutputFormat(e.target.value as OutputFormat)}
+                            icon={<FileVideoIcon className="w-4 h-4 text-gray-400" />}
+                        >
+                            <option value={OutputFormat.MP4}>MP4</option>
+                            <option value={OutputFormat.MOV}>MOV</option>
+                        </CustomSelect>
+
+                        <div>
+                            <label className="text-xs block mb-1.5 font-medium text-gray-400">Duração (s)</label>
+                            <div className="relative">
+                                <ClockIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input 
+                                    type="number" 
+                                    min="4"
+                                    max="60"
+                                    value={durationSeconds}
+                                    onChange={(e) => setDurationSeconds(parseInt(e.target.value))}
+                                    onBlur={handleDurationBlur}
+                                    className={`w-full bg-[#1f1f1f] border rounded-lg pl-10 pr-3 py-2 text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
+                                        durationSeconds > 8 ? 'border-amber-500/50 focus:border-amber-500' : 'border-gray-600'
+                                    }`}
+                                />
+                            </div>
+                        </div>
+
+                         {generationMode === GenerationMode.TEXT_TO_SPEECH && (
+                             <CustomSelect
+                                label="Voz"
+                                value={voiceName}
+                                onChange={(e) => setVoiceName(e.target.value)}
+                                icon={<MicIcon className="w-4 h-4 text-gray-400" />}
+                            >
+                                <option value="Puck">Puck</option>
+                                <option value="Charon">Charon</option>
+                                <option value="Kore">Kore</option>
+                                <option value="Fenrir">Fenrir</option>
+                                <option value="Aoede">Aoede</option>
+                            </CustomSelect>
+                         )}
+
+                         {/* Background Music Option in Settings */}
+                         {(generationMode !== GenerationMode.TEXT_TO_AUDIO && generationMode !== GenerationMode.TEXT_TO_SPEECH) && (
+                            <div>
+                                <label className="text-xs block mb-1.5 font-medium text-gray-400">Música de Fundo (MP3, WAV)</label>
+                                <div className="relative">
+                                    <input 
+                                        type="file" 
+                                        accept="audio/mpeg, audio/wav, audio/mp3" 
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) setAudioFile(file);
+                                        }}
+                                        className="hidden"
+                                        id="bg-music-upload-settings"
+                                    />
+                                    <label 
+                                        htmlFor="bg-music-upload-settings"
+                                        className="w-full bg-[#1f1f1f] border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-300 hover:text-white hover:border-gray-500 cursor-pointer flex items-center gap-2 truncate transition-colors"
+                                    >
+                                        <AudioLinesIcon className="w-4 h-4 flex-shrink-0 text-gray-400" />
+                                        <span className="truncate">
+                                            {audioFile ? audioFile.name : 'Carregar Áudio'}
+                                        </span>
+                                    </label>
+                                    {audioFile && (
+                                        <button 
+                                            type="button"
+                                            onClick={() => setAudioFile(null)}
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-red-400 transition-colors"
+                                            title="Remover áudio"
+                                        >
+                                            <XMarkIcon className="w-3 h-3" />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                         )}
+                         
+                         {/* Loop Checkbox in Settings */}
+                         {(generationMode === GenerationMode.TEXT_TO_VIDEO || generationMode === GenerationMode.EXTEND_VIDEO) && (
+                            <div className="flex items-end pb-2">
+                                <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer group">
+                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isLooping ? 'bg-indigo-600 border-indigo-600' : 'bg-[#1f1f1f] border-gray-600 group-hover:border-gray-500'}`}>
+                                        {isLooping && <SparklesIcon className="w-3 h-3 text-white" />}
+                                    </div>
+                                    <input 
+                                        type="checkbox" 
+                                        checked={isLooping} 
+                                        onChange={(e) => setIsLooping(e.target.checked)}
+                                        className="hidden" 
+                                    />
+                                    <span>Vídeo em Loop</span>
+                                </label>
+                            </div>
+                         )}
+                    </div>
+                )}
+
+                 {/* Warning for long durations */}
+                 {isSettingsOpen && durationSeconds > 8 && (
+                    <div className="mx-4 mb-4 p-3 bg-amber-900/20 border border-amber-500/30 rounded-lg flex items-start gap-3">
+                        <AlertTriangleIcon className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <div className="text-xs text-amber-200/80 leading-relaxed">
+                            <strong className="text-amber-400 block mb-1">Duração Estendida</strong>
+                            Vídeos acima de 8 segundos podem demorar mais para processar ou falhar devido a limites de cota da API. Se falhar, tente reduzir para 5-8s e use a função "Estender".
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <button
+                type="submit"
+                id="tour-generate"
+                className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transform transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+                <SparklesIcon className="w-5 h-5" />
+                Gerar Conteúdo
+            </button>
+        </div>
+      </div>
+    </form>
   );
 };
 

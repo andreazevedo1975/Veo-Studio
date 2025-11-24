@@ -31,7 +31,10 @@ const Tutorial: React.FC<TutorialProps> = ({ steps, isActive, onComplete, onSkip
     const element = document.getElementById(targetId);
     if (element) {
       // Scroll into view ONLY when the step changes, not on every scroll event
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Using a timeout to ensure layout is settled
+      setTimeout(() => {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
     }
   }, [isActive, currentStepIndex, steps]);
 
@@ -47,7 +50,19 @@ const Tutorial: React.FC<TutorialProps> = ({ steps, isActive, onComplete, onSkip
       const element = document.getElementById(targetId);
       if (element) {
         const rect = element.getBoundingClientRect();
-        setTargetRect(rect);
+        // Only update if dimensions actually changed significantly to avoid thrashing
+        setTargetRect((prev) => {
+          if (!prev) return rect;
+          if (
+            Math.abs(prev.top - rect.top) < 1 &&
+            Math.abs(prev.left - rect.left) < 1 &&
+            Math.abs(prev.width - rect.width) < 1 &&
+            Math.abs(prev.height - rect.height) < 1
+          ) {
+            return prev;
+          }
+          return rect;
+        });
       } else {
         setTargetRect(null);
       }
@@ -88,7 +103,7 @@ const Tutorial: React.FC<TutorialProps> = ({ steps, isActive, onComplete, onSkip
       {/* Backdrop with cutout effect using box-shadow trick - Visual only */}
       {/* Added pointer-events-none explicitly to be safe */}
       <div 
-        className="absolute inset-0 transition-all duration-500 ease-in-out pointer-events-none"
+        className="absolute inset-0 transition-all duration-300 ease-out pointer-events-none"
         style={{
           boxShadow: `0 0 0 9999px rgba(0, 0, 0, 0.75)`,
           top: targetRect.top - 8,
@@ -102,7 +117,7 @@ const Tutorial: React.FC<TutorialProps> = ({ steps, isActive, onComplete, onSkip
 
       {/* Tooltip Card - MUST be pointer-events-auto to be clickable */}
       <div
-        className="absolute w-80 bg-[#2c2c2e] border border-gray-600 rounded-xl shadow-2xl p-5 transition-all duration-500 ease-in-out flex flex-col gap-3 pointer-events-auto"
+        className="absolute w-80 bg-[#2c2c2e] border border-gray-600 rounded-xl shadow-2xl p-5 transition-all duration-300 ease-out flex flex-col gap-3 pointer-events-auto"
         style={{
           // Simple positioning logic: prioritize bottom, fallback to top if too low
           top: targetRect.bottom + 24 > window.innerHeight - 200 

@@ -52,6 +52,7 @@ import {
   HeartHandshake,
   History,
   Image as ImageIconLucide,
+  ImagePlay,
   Image,
   KeyRound,
   Landmark,
@@ -201,6 +202,10 @@ export const DownloadIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => 
 
 export const ImageIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <ImageIconLucide {...defaultProps} {...props} />
+);
+
+export const ImagePlayIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <ImagePlay {...defaultProps} {...props} />
 );
 
 export const LoaderIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

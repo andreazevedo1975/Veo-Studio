@@ -39,6 +39,7 @@ export enum OutputFormat {
 
 export enum GenerationMode {
   TEXT_TO_VIDEO = 'Texto para Vídeo',
+  IMAGE_TO_VIDEO = 'Imagem para Vídeo',
   TEXT_TO_IMAGE = 'Texto para Imagem Estática',
   TEXT_TO_AUDIO = 'Texto para Música',
   TEXT_TO_SPEECH = 'Texto para Narração',
@@ -70,6 +71,7 @@ export interface GenerateVideoParams {
   endFrame?: ImageFile | null;
   referenceImages?: ImageFile[];
   styleImage?: ImageFile | null;
+  sourceImage?: ImageFile | null; // Nova imagem de origem para Image-to-Video
   inputVideo?: VideoFile | null;
   inputVideoObject?: Video | null;
   isLooping?: boolean;

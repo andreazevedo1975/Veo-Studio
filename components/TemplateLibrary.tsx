@@ -3,7 +3,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
-import React from 'react';
+import React, { useState } from 'react';
 import {
   AspectRatio,
   GenerateVideoParams,
@@ -52,6 +52,7 @@ import {
   LaptopIcon,
   MagicWandIcon,
   MehIcon,
+  MicIcon,
   Mic2Icon,
   MonitorPlayIcon,
   MusicIcon,
@@ -81,6 +82,7 @@ import {
   UserIcon,
   UtensilsIcon,
   WindIcon,
+  WrenchIcon,
   ZapIcon,
 } from './icons';
 
@@ -105,7 +107,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Anime opening sequence, dynamic action shot, vibrant colors, cel shaded animation style, high energy, speed lines',
+        'Sequência de abertura de anime, cena de ação dinâmica, cores vibrantes, estilo de animação cel shaded, alta energia, linhas de velocidade',
     },
   },
   {
@@ -120,7 +122,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Pure joy and happiness, vibrant colors, people laughing in a park, sunny day, colorful balloons, confetti, high energy, 4k, cinematic, uplifting atmosphere',
+        'Pura alegria e felicidade, cores vibrantes, pessoas rindo em um parque, dia ensolarado, balões coloridos, confete, alta energia, 4k, cinematográfico, atmosfera edificante',
     },
   },
   {
@@ -135,7 +137,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Visual metaphor for relief, sun breaking through dark heavy storm clouds, warm golden light flooding a wet landscape, birds taking flight, atmosphere of release and peace, cinematic, highly detailed',
+        'Metáfora visual de alívio, sol rompendo nuvens pesadas de tempestade, luz dourada quente inundando uma paisagem molhada, pássaros levantando voo, atmosfera de libertação e paz, cinematográfico, altamente detalhado',
     },
   },
   {
@@ -150,7 +152,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Ambient nature scene, peaceful bamboo forest, wind gently swaying leaves, soft filtered sunlight, floating particles, meditative atmosphere, cinematic, 8k',
+        'Cena de natureza ambiente, floresta de bambu pacífica, vento balançando suavemente as folhas, luz solar filtrada suave, partículas flutuantes, atmosfera meditativa, cinematográfico, 8k',
     },
   },
   {
@@ -165,7 +167,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Two best friends hugging and laughing at sunset, golden hour, lens flare, genuine emotion, warmth, friendship, cinematic lighting, 4k',
+        'Dois melhores amigos se abraçando e rindo ao pôr do sol, hora dourada, reflexo de lente, emoção genuína, calor, amizade, iluminação cinematográfica, 4k',
     },
   },
   {
@@ -180,7 +182,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Cinematic romantic scene, couple holding hands walking on a beach at sunset, soft warm lighting, bokeh effect, emotional connection, golden hour, highly detailed',
+        'Cena romântica cinematográfica, casal de mãos dadas caminhando na praia ao pôr do sol, iluminação suave e quente, efeito bokeh, conexão emocional, hora dourada, altamente detalhado',
     },
   },
   {
@@ -195,7 +197,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Cute fluffy kittens playing in a basket, soft morning sunlight, cozy atmosphere, high detail fur, 4k resolution, cinematic, shallow depth of field',
+        'Gatinhos fofos brincando em uma cesta, luz solar suave da manhã, atmosfera aconchegante, pelos em alto detalhe, resolução 4k, cinematográfico, profundidade de campo rasa',
     },
   },
   {
@@ -210,7 +212,22 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Visual representation of anxiety, busy city street timelapse with motion blur, fast cuts, overwhelming neon lights, shaky camera, intense atmosphere, chaotic energy',
+        'Representação visual da ansiedade, timelapse de rua movimentada da cidade com desfoque de movimento, cortes rápidos, luzes neon avassaladoras, câmera tremida, atmosfera intensa, energia caótica',
+    },
+  },
+  {
+    id: 'zombies',
+    name: 'Apocalipse Zumbi',
+    description: 'Sobrevivência em cidade em ruínas.',
+    icon: <SkullIcon className="w-6 h-6 text-stone-400" />,
+    params: {
+      mode: GenerationMode.TEXT_TO_VIDEO,
+      model: VeoModel.VEO_FAST,
+      resolution: Resolution.P720,
+      aspectRatio: AspectRatio.LANDSCAPE,
+      outputFormat: OutputFormat.MP4,
+      prompt:
+        'Cena pós-apocalíptica de zumbis, cidade em ruínas, fumaça, hordas de mortos-vivos vagando, atmosfera sombria, sobrevivência, estilo cinematográfico, texturas sujas, 4k',
     },
   },
   {
@@ -225,7 +242,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Watercolor painting animation, soft pastel colors, ink bleed effect, paper texture, artistic and dreamy flow',
+        'Animação em pintura aquarela, cores pastéis suaves, efeito de tinta sangrando, textura de papel, fluxo artístico e onírico',
     },
   },
   {
@@ -240,7 +257,22 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Modern architectural visualization, luxurious glass house, golden hour sunlight, photorealistic render, interior design',
+        'Visualização arquitetônica moderna, casa de vidro luxuosa, luz solar da hora dourada, renderização fotorrealista, design de interiores',
+    },
+  },
+  {
+    id: 'ballet',
+    name: 'Ballet Clássico',
+    description: 'Elegância e movimento no palco.',
+    icon: <FeatherIcon className="w-6 h-6 text-pink-200" />,
+    params: {
+      mode: GenerationMode.TEXT_TO_VIDEO,
+      model: VeoModel.VEO,
+      resolution: Resolution.P1080,
+      aspectRatio: AspectRatio.LANDSCAPE,
+      outputFormat: OutputFormat.MP4,
+      prompt:
+        'Bailarina clássica dançando no palco de um teatro, holofote único, tutu branco, movimentos elegantes, câmera lenta, partículas de poeira na luz, atmosfera dramática, 4k',
     },
   },
   {
@@ -255,7 +287,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Lo-fi hip hop aesthetic, anime style girl studying at desk, rainy window, cozy room, chill vibes, soft lighting, loopable, 2d animation',
+        'Estética lo-fi hip hop, garota estilo anime estudando na mesa, janela com chuva, quarto aconchegante, vibes relaxantes, iluminação suave, loopável, animação 2d',
     },
   },
   {
@@ -270,7 +302,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Solo blues guitarist sitting on a stool, smoky dive bar atmosphere, neon sign in background, moody blue lighting, soulful expression, cinematic, high contrast',
+        'Guitarrista de blues solo sentado em um banco, atmosfera de bar enfumaçado, letreiro neon ao fundo, iluminação azul melancólica, expressão com alma, cinematográfico, alto contraste',
     },
   },
   {
@@ -285,7 +317,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Bollywood musical scene, large group dance choreography, vibrant colorful silk costumes, palaces in background, energetic movement, high saturation, cinematic lighting',
+        'Cena musical de Bollywood, coreografia de dança em grande grupo, trajes de seda coloridos vibrantes, palácios ao fundo, movimento energético, alta saturação, iluminação cinematográfica',
     },
   },
   {
@@ -300,7 +332,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Rio de Janeiro beach at sunset, Ipanema, acoustic guitar leaning on a palm tree, gentle waves, soft warm lighting, bossa nova vibe, cinematic, peaceful',
+        'Praia do Rio de Janeiro ao pôr do sol, Ipanema, violão acústico encostado em uma palmeira, ondas gentis, iluminação quente e suave, vibe bossa nova, cinematográfico, pacífico',
     },
   },
   {
@@ -315,7 +347,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Cozy coffee shop atmosphere, steaming cup of latte on a wooden table, rain outside the window, soft warm lighting, lo-fi vibe, 4k',
+        'Atmosfera de cafeteria aconchegante, xícara de latte fumegante em mesa de madeira, chuva lá fora na janela, iluminação quente e suave, vibe lo-fi, 4k',
     },
   },
   {
@@ -330,7 +362,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Super slow motion, water balloon popping, macro details, water droplets suspended in air, high frame rate, cinematic',
+        'Super câmera lenta, balão de água estourando, detalhes macro, gotículas de água suspensas no ar, alta taxa de quadros, cinematográfico',
     },
   },
   {
@@ -345,7 +377,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Futuristic cyberpunk city street at night, neon lights, rain reflections, flying cars, blade runner style, cinematic composition',
+        'Rua de cidade cyberpunk futurista à noite, luzes neon, reflexos de chuva, carros voadores, estilo blade runner, composição cinematográfica',
     },
   },
   {
@@ -360,7 +392,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'High-end product commercial, sleek design, rotating on turntable, dramatic studio lighting, rim light, 4k, luxurious feel',
+        'Comercial de produto de alto padrão, design elegante, girando em base giratória, iluminação dramática de estúdio, luz de recorte, 4k, sensação luxuosa',
     },
   },
   {
@@ -375,7 +407,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Close up shot of hands helping someone up, warm soft lighting, emotional moment of kindness, human connection, cinematic, depth of field, hope',
+        'Close-up de mãos ajudando alguém a se levantar, iluminação suave e quente, momento emocional de bondade, conexão humana, cinematográfico, profundidade de campo, esperança',
     },
   },
   {
@@ -390,7 +422,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Electric guitar player on stage, lens flare, stadium crowd silhouette, energetic atmosphere, volumetric lighting, 4k, rock concert',
+        'Guitarrista tocando no palco, reflexo de lente, silhueta da multidão no estádio, atmosfera energética, iluminação volumétrica, 4k, concerto de rock',
     },
   },
   {
@@ -405,7 +437,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Surreal dreamlike scene representing confusion, swirling fog, floating clocks, distorted perspective, muted colors, mysterious atmosphere, cinematic, inception style',
+        'Cena onírica surreal representando confusão, névoa rodopiante, relógios flutuantes, perspectiva distorcida, cores suaves, atmosfera misteriosa, cinematográfico, estilo inception',
     },
   },
   {
@@ -420,7 +452,22 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Cinematic shot of courage, a lone hero standing against a giant storm, shield raised, golden lighting breaking through dark clouds, epic scale, determination, 8k',
+        'Cena cinematográfica de coragem, um herói solitário contra uma tempestade gigante, escudo erguido, luz dourada rompendo nuvens escuras, escala épica, determinação, 8k',
+    },
+  },
+  {
+    id: 'race',
+    name: 'Corrida Futurista',
+    description: 'Velocidade e naves anti-gravidade.',
+    icon: <RocketIcon className="w-6 h-6 text-cyan-500" />,
+    params: {
+      mode: GenerationMode.TEXT_TO_VIDEO,
+      model: VeoModel.VEO_FAST,
+      resolution: Resolution.P720,
+      aspectRatio: AspectRatio.LANDSCAPE,
+      outputFormat: OutputFormat.MP4,
+      prompt:
+        'Corrida de naves espaciais futuristas em alta velocidade, cidade sci-fi, rastro de luz neon, desfoque de movimento intenso, adrenalina, 4k, estilo wipeout cinematográfico',
     },
   },
   {
@@ -435,7 +482,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'American country music scene, musician sitting on a porch at a farm during golden hour, playing acoustic guitar, horses in background, rustic atmosphere, cinematic',
+        'Cena de música country americana, músico sentado em uma varanda de fazenda durante a hora dourada, tocando violão, cavalos ao fundo, atmosfera rústica, cinematográfico',
     },
   },
   {
@@ -450,7 +497,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'A child looking at a glowing magical firefly in a forest, eyes wide with wonder, macro shot, magical atmosphere, sparkles, cinematic lighting, discovery',
+        'Uma criança olhando para um vaga-lume mágico brilhante em uma floresta, olhos arregalados de admiração, close-up, atmosfera mágica, brilhos, iluminação cinematográfica, descoberta',
     },
   },
   {
@@ -465,7 +512,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Visual of disappointment, a single wilted flower in the rain, grey color palette, raindrops hitting a window, blurry background, slow motion, melancholic mood',
+        'Visual de decepção, uma única flor murcha na chuva, paleta de cores cinza, gotas de chuva batendo na janela, fundo desfocado, câmera lenta, clima melancólico',
     },
   },
   {
@@ -480,7 +527,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Intense burning desire, close up of longing eyes, biting lip, red and purple neon lighting, sweaty skin texture, cinematic bokeh, passion, obsession, highly detailed',
+        'Desejo ardente intenso, close-up de olhos ansiando, mordendo o lábio, iluminação neon vermelha e roxa, textura de pele suada, bokeh cinematográfico, paixão, obsessão, altamente detalhado',
     },
   },
   {
@@ -495,7 +542,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Cinematic shot of despair, silhouette of a person with head in hands, sitting in a dark empty room, dramatic long shadows, cold blue lighting, feeling of isolation and hopelessness',
+        'Cena cinematográfica de desespero, silhueta de uma pessoa com a cabeça nas mãos, sentada em um quarto escuro e vazio, sombras longas e dramáticas, iluminação azul fria, sensação de isolamento e desesperança',
     },
   },
   {
@@ -510,7 +557,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        '70s disco dance floor, mirror ball reflections, funky colorful lights, bell bottom pants, retro dance moves, vibrant energy, vintage film grain',
+        'Pista de dança disco dos anos 70, reflexos de globo de espelhos, luzes coloridas funky, calças boca de sino, movimentos de dança retrô, energia vibrante, granulação de filme vintage',
     },
   },
   {
@@ -525,7 +572,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Visual representation of emotional pain, dark cinematic scene, shattered glass, stormy grey sky, heavy rain, cold blue tones, emotional despair, dramatic lighting, metaphorical',
+        'Representação visual da dor emocional, cena cinematográfica sombria, vidro quebrado, céu cinza tempestuoso, chuva forte, tons de azul frio, desespero emocional, iluminação dramática, metafórico',
     },
   },
   {
@@ -540,7 +587,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Cinematic aerial drone shot, flying over epic mountain range at sunset, sweeping camera movement, wide angle, breathtaking view',
+        'Cena cinematográfica aérea de drone, voando sobre uma cordilheira épica ao pôr do sol, movimento de câmera amplo, grande angular, vista de tirar o fôlego',
     },
   },
   {
@@ -555,7 +602,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Drum and Bass visualizer, high speed tunnel movement, glitch effects, neon green and black, futuristic cyber aesthetic, energetic pulse, 60fps feel',
+        'Visualizador de Drum and Bass, movimento de túnel em alta velocidade, efeitos de glitch, verde neon e preto, estética cibernética futurista, pulso energético, sensação de 60fps',
     },
   },
   {
@@ -570,7 +617,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Dubstep concert drop, massive speaker wall shaking, shockwave visual effect, strobe lighting chaotic, crowd jumping, intense energy, dark club atmosphere',
+        'Drop de show de dubstep, parede de alto-falantes maciça tremendo, efeito visual de onda de choque, iluminação estroboscópica caótica, multidão pulando, energia intensa, atmosfera de clube escuro',
     },
   },
   {
@@ -585,7 +632,22 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Educational explainer animation, paper cutout style, simple graphics, clear visual communication, bright colors, infographic',
+        'Animação explicativa educacional, estilo recorte de papel, gráficos simples, comunicação visual clara, cores brilhantes, infográfico',
+    },
+  },
+  {
+    id: 'interview',
+    name: 'Entrevista Documental',
+    description: 'Iluminação profissional e bokeh.',
+    icon: <MicIcon className="w-6 h-6 text-blue-300" />,
+    params: {
+      mode: GenerationMode.TEXT_TO_VIDEO,
+      model: VeoModel.VEO,
+      resolution: Resolution.P1080,
+      aspectRatio: AspectRatio.LANDSCAPE,
+      outputFormat: OutputFormat.MP4,
+      prompt:
+        'Entrevista estilo documentário, pessoa falando para a câmera, iluminação de três pontos profissional, fundo de escritório desfocado (bokeh), alta resolução, tom sério, cinematográfico',
     },
   },
   {
@@ -600,7 +662,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Burst of enthusiasm, crowd cheering with confetti explosions, bright saturated colors, dynamic camera movement, smiles, high energy celebration, festival vibe',
+        'Explosão de entusiasmo, multidão torcendo com explosões de confete, cores saturadas brilhantes, movimento de câmera dinâmico, sorrisos, celebração de alta energia, vibe de festival',
     },
   },
   {
@@ -615,7 +677,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Modern home office setup, laptop on desk, natural sunlight, indoor plants, clean minimalist workspace, productive atmosphere',
+        'Configuração moderna de home office, laptop na mesa, luz solar natural, plantas internas, espaço de trabalho minimalista limpo, atmosfera produtiva',
     },
   },
   {
@@ -630,7 +692,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Symbol of hope, a small green sprout growing through cracked concrete, ray of warm sunlight hitting it, morning dew, depth of field, inspiring and uplifting, cinematic',
+        'Símbolo de esperança, um pequeno broto verde crescendo através de concreto rachado, raio de luz solar quente atingindo-o, orvalho da manhã, profundidade de campo, inspirador e edificante, cinematográfico',
     },
   },
   {
@@ -645,7 +707,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Extreme sports action, snowboarding down a mountain, dynamic camera follow, snow spray, fast paced, adrenaline, 4k',
+        'Ação de esportes radicais, snowboard descendo uma montanha, câmera dinâmica seguindo, spray de neve, ritmo acelerado, adrenalina, 4k',
     },
   },
   {
@@ -660,7 +722,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'A video scene generated in the exact visual style of the reference image, keeping the artistic vibe, colors, and lighting, highly detailed',
+        'Uma cena de vídeo gerada no exato estilo visual da imagem de referência, mantendo a vibe artística, cores e iluminação, altamente detalhado',
       referenceImages: [],
     },
   },
@@ -676,7 +738,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Euphoric visual experience, kaleidoscope of neon colors, fast motion blur, fireworks, festival atmosphere, intense positive energy, psychedelic, high speed',
+        'Experiência visual eufórica, caleidoscópio de cores neon, desfoque de movimento rápido, fogos de artifício, atmosfera de festival, energia positiva intensa, psicodélico, alta velocidade',
     },
   },
   {
@@ -691,7 +753,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Deep space exploration, spaceship flying past colorful nebula, stars, cinematic sci-fi movie scene, highly detailed',
+        'Exploração do espaço profundo, nave espacial voando por nebulosa colorida, estrelas, cena de filme de ficção científica cinematográfica, altamente detalhado',
     },
   },
   {
@@ -706,7 +768,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Visual of ecstasy and transcendence, spiraling golden particles, ascending towards a bright divine light, feeling of weightlessness, ethereal sound visualization, surreal, cinematic',
+        'Visual de êxtase e transcendência, partículas douradas em espiral, ascendendo em direção a uma luz divina brilhante, sensação de leveza, visualização de som etéreo, surreal, cinematográfico',
     },
   },
   {
@@ -721,7 +783,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Radiant happiness, person running through a field of sunflowers during golden hour, lens flare, genuine smiles, slow motion, bright and airy atmosphere, cinematic',
+        'Felicidade radiante, pessoa correndo por um campo de girassóis durante a hora dourada, reflexo de lente, sorrisos genuínos, câmera lenta, atmosfera brilhante e arejada, cinematográfico',
     },
   },
   {
@@ -736,7 +798,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Massive EDM music festival, main stage, spectacular laser light show, confetti, massive jumping crowd, energetic atmosphere, neon colors, night time, wide shot',
+        'Festival de música EDM massivo, palco principal, show de luzes laser espetacular, confete, multidão gigante pulando, atmosfera energética, cores neon, noite, plano aberto',
     },
   },
   {
@@ -751,7 +813,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Film noir style, black and white, detective walking on rainy street at night, high contrast shadows, dramatic lighting, 1940s vibe',
+        'Estilo Filme Noir, preto e branco, detetive caminhando em rua chuvosa à noite, sombras de alto contraste, iluminação dramática, vibe anos 40',
     },
   },
   {
@@ -766,7 +828,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Horror movie scene, dark foggy forest, mysterious silhouette, eerie atmosphere, cinematic lighting, suspenseful',
+        'Cena de filme de terror, floresta escura com neblina, silhueta misteriosa, atmosfera assustadora, iluminação cinematográfica, suspense',
     },
   },
   {
@@ -781,7 +843,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Indie folk musician playing acoustic guitar by a campfire, forest setting, fireflies, warm cozy lighting, intimate atmosphere, cinematic depth of field',
+        'Músico folk indie tocando violão acústico perto de uma fogueira, cenário de floresta, vaga-lumes, iluminação aconchegante quente, atmosfera íntima, profundidade de campo cinematográfica',
     },
   },
   {
@@ -796,22 +858,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Traditional Brazilian Forró party, colorful flags (bandeirinhas), couple dancing close, accordion player, bonfire, vibrant colors, festive atmosphere, cinematic',
-    },
-  },
-  {
-    id: 'underwater',
-    name: 'Fundo do Mar',
-    description: 'Recife de corais e vida marinha.',
-    icon: <DropletsIcon className="w-6 h-6 text-blue-300" />,
-    params: {
-      mode: GenerationMode.TEXT_TO_VIDEO,
-      model: VeoModel.VEO,
-      resolution: Resolution.P1080,
-      aspectRatio: AspectRatio.LANDSCAPE,
-      outputFormat: OutputFormat.MP4,
-      prompt:
-        'Underwater coral reef, vibrant tropical fish, sun rays piercing through water, bubbles, cinematic ocean scene',
+        'Festa tradicional de Forró brasileiro, bandeirinhas coloridas, casal dançando junto, sanfoneiro, fogueira, cores vibrantes, atmosfera festiva, cinematográfico',
     },
   },
   {
@@ -826,7 +873,37 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Brazilian funk street party (baile funk), massive wall of speakers (paredão), neon lights, energetic dancing crowd, urban favela night scene, vibrant atmosphere, 4k',
+        'Festa de rua de funk brasileiro (baile funk), parede de alto-falantes maciça (paredão), luzes neon, multidão dançando energeticamente, cena noturna de favela urbana, atmosfera vibrante, 4k',
+    },
+  },
+  {
+    id: 'underwater',
+    name: 'Fundo do Mar',
+    description: 'Recife de corais e vida marinha.',
+    icon: <DropletsIcon className="w-6 h-6 text-blue-300" />,
+    params: {
+      mode: GenerationMode.TEXT_TO_VIDEO,
+      model: VeoModel.VEO,
+      resolution: Resolution.P1080,
+      aspectRatio: AspectRatio.LANDSCAPE,
+      outputFormat: OutputFormat.MP4,
+      prompt:
+        'Recife de coral subaquático, peixes tropicais vibrantes, raios de sol penetrando na água, bolhas, cena oceânica cinematográfica',
+    },
+  },
+  {
+    id: 'soccer',
+    name: 'Futebol Arte',
+    description: 'A emoção do gol em câmera lenta no estádio.',
+    icon: <TrophyIcon className="w-6 h-6 text-emerald-500" />,
+    params: {
+      mode: GenerationMode.TEXT_TO_VIDEO,
+      model: VeoModel.VEO_FAST,
+      resolution: Resolution.P720,
+      aspectRatio: AspectRatio.LANDSCAPE,
+      outputFormat: OutputFormat.MP4,
+      prompt:
+        'Jogo de futebol cinematográfico, jogador chutando a bola em um estádio lotado à noite, super câmera lenta, grama voando, iluminação de estádio, torcida desfocada ao fundo, 4k, energia vibrante',
     },
   },
   {
@@ -841,7 +918,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Gourmet food commercial, steaming delicious burger, slow motion cheese pull, macro shot, appetizing lighting, 4k',
+        'Comercial de comida gourmet, hambúrguer delicioso fumegante, puxada de queijo em câmera lenta, close-up, iluminação apetitosa, 4k',
     },
   },
   {
@@ -856,7 +933,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Gospel choir singing in a grand church, sunbeams streaming through stained glass windows, dust motes, emotional uplifting atmosphere, raised hands, cinematic lighting',
+        'Coral gospel cantando em uma grande igreja, raios de sol entrando pelos vitrais, poeira flutuante, atmosfera emocional edificante, mãos levantadas, iluminação cinematográfica',
     },
   },
   {
@@ -871,7 +948,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Visualizing gratitude, warm sunrise over a majestic mountain, person with open arms, soft glowing light, spiritual atmosphere, peaceful, cinematic, thankful',
+        'Visualizando a gratidão, nascer do sol quente sobre uma montanha majestosa, pessoa de braços abertos, luz suave brilhante, atmosfera espiritual, pacífico, cinematográfico, grato',
     },
   },
   {
@@ -886,7 +963,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        '90s Grunge rock band rehearsal in a dim garage, vintage aesthetic, flannel shirts, messy hair, fisheye lens effect, moody lighting, raw energy, dusty atmosphere',
+        'Ensaio de banda de rock grunge dos anos 90 em uma garagem escura, estética vintage, camisas de flanela, cabelo bagunçado, efeito de lente olho de peixe, iluminação sombria, energia crua, atmosfera empoeirada',
     },
   },
   {
@@ -901,7 +978,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Heavy metal band performing in a dark warehouse, aggressive strobe lighting, headbanging, smoke machines, intense atmosphere, high contrast, dark aesthetic',
+        'Banda de heavy metal tocando em um armazém escuro, iluminação estroboscópica agressiva, headbanging, máquinas de fumaça, atmosfera intensa, alto contraste, estética sombria',
     },
   },
   {
@@ -916,7 +993,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Urban street scene, graffiti art walls, breakdancers, boombox, vibrant street wear, 90s hip hop vibe, fisheye lens effect, dynamic movement',
+        'Cena de rua urbana, paredes com arte em graffiti, dançarinos de break, boombox, roupas de rua vibrantes, vibe hip hop anos 90, efeito de lente olho de peixe, movimento dinâmico',
     },
   },
   {
@@ -931,7 +1008,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Cinematic historical documentary footage, ancient greek temple ruins at sunset, establishing shot, marble columns, dust particles, golden hour, realistic textures, 8k, epic atmosphere',
+        'Filme documentário histórico cinematográfico, ruínas de templo grego antigo ao pôr do sol, plano de estabelecimento, colunas de mármore, partículas de poeira, hora dourada, texturas realistas, 8k, atmosfera épica',
     },
   },
   {
@@ -946,7 +1023,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Tropical house party at a beach club during sunset, DJ decks, palm trees in silhouette, warm golden orange lighting, slow motion dancing, relaxed summer vibes, cinematic',
+        'Festa de house tropical em um clube de praia durante o pôr do sol, decks de DJ, silhuetas de palmeiras, iluminação laranja dourada quente, dança em câmera lenta, vibes de verão relaxadas, cinematográfico',
     },
   },
   {
@@ -961,7 +1038,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Visual representation of envy, glowing green eyes in the shadows, snakes slithering, cold emerald lighting, dramatic atmosphere, jealousy, cinematic, mysterious',
+        'Representação visual da inveja, olhos verdes brilhantes nas sombras, cobras deslizando, iluminação esmeralda fria, atmosfera dramática, ciúme, cinematográfico, misterioso',
     },
   },
   {
@@ -976,7 +1053,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Uncontrollable rage, screaming silhouette against a wall of fire, shattering glass, intense red and orange colors, high contrast, chaotic energy, explosive anger',
+        'Fúria incontrolável, silhueta gritando contra uma parede de fogo, vidro estilhaçando, cores vermelhas e laranjas intensas, alto contraste, energia caótica, raiva explosiva',
     },
   },
   {
@@ -991,7 +1068,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Isometric 3D room render, cute low poly style, pastel colors, soft lighting, blender 3d illustration, cozy atmosphere',
+        'Renderização de sala isométrica 3D, estilo low poly fofo, cores pastéis, iluminação suave, ilustração blender 3d, atmosfera aconchegante',
     },
   },
   {
@@ -1006,7 +1083,22 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'New Orleans brass band performing on a sunny street, colorful french quarter architecture, mardi gras beads, lively atmosphere, trumpet close up, handheld camera style, joyful celebration',
+        'Banda de metais de Nova Orleans tocando em uma rua ensolarada, arquitetura colorida do bairro francês, colares de mardi gras, atmosfera animada, close-up de trompete, estilo de câmera na mão, celebração alegre',
+    },
+  },
+  {
+    id: 'jazz-fusion',
+    name: 'Jazz Fusion',
+    description: 'Mistura elétrica e improvisação moderna.',
+    icon: <MusicIcon className="w-6 h-6 text-teal-500" />,
+    params: {
+      mode: GenerationMode.TEXT_TO_VIDEO,
+      model: VeoModel.VEO_FAST,
+      resolution: Resolution.P720,
+      aspectRatio: AspectRatio.LANDSCAPE,
+      outputFormat: OutputFormat.MP4,
+      prompt:
+        'Banda de jazz fusion tocando em estúdio moderno, piano elétrico rhodes, baixo funky, iluminação colorida suave, atmosfera sofisticada, close-up nos instrumentos',
     },
   },
   {
@@ -1021,7 +1113,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Close up of a vintage microphone in a dimly lit jazz club, saxophone background, bokeh lights, moody atmosphere, noir style, cinematic',
+        'Close-up de um microfone vintage em um clube de jazz mal iluminado, saxofone ao fundo, luzes bokeh, atmosfera sombria, estilo noir, cinematográfico',
     },
   },
   {
@@ -1036,7 +1128,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'K-Pop music video set, vibrant pastel colors, group dancing synchronized choreography, studio lighting, glossy look, high production value, cinematic',
+        'Cenário de videoclipe de K-Pop, cores pastéis vibrantes, grupo dançando coreografia sincronizada, iluminação de estúdio, visual brilhante, alta produção, cinematográfico',
     },
   },
   {
@@ -1051,7 +1143,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Mariachi band performing in a colorful mexican plaza, traditional charro suits, sombreros, trumpet and guitar, vibrant ribbons, festive day, cinematic',
+        'Banda de mariachi tocando em uma praça mexicana colorida, trajes tradicionais de charro, sombreros, trompete e violão, fitas vibrantes, dia festivo, cinematográfico',
     },
   },
   {
@@ -1066,7 +1158,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Psychological fear, walking down a dark narrow corridor with flickering lights, looming shadow figure, heartbeat sound implied, high suspense, horror atmosphere, cinematic',
+        'Medo psicológico, caminhando por um corredor estreito e escuro com luzes piscando, figura sombria ameaçadora, som de batimentos cardíacos implícito, alto suspense, atmosfera de terror, cinematográfico',
     },
   },
   {
@@ -1081,7 +1173,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Quiet melancholy, gentle drizzle on a window pane, soft grey light, empty coffee cup, blurred cityscape background, contemplative mood, lo-fi aesthetic',
+        'Melancolia silenciosa, garoa suave em uma vidraça, luz cinza suave, xícara de café vazia, paisagem urbana desfocada ao fundo, clima contemplativo, estética lo-fi',
     },
   },
   {
@@ -1096,7 +1188,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'High fashion editorial shot, avant-garde outfit, model walking on a mirror floor, dramatic spotlight, minimal background, slow motion, 8k, cinematic lighting',
+        'Foto editorial de alta moda, roupa vanguardista, modelo caminhando sobre um chão de espelho, holofote dramático, fundo minimalista, câmera lenta, 8k, iluminação cinematográfica',
     },
   },
   {
@@ -1111,7 +1203,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Magical fantasy landscape, floating islands, glowing particles, ethereal atmosphere, dreamlike quality, digital art style',
+        'Paisagem mágica de fantasia, ilhas flutuantes, partículas brilhantes, atmosfera etérea, qualidade onírica, estilo de arte digital',
     },
   },
   {
@@ -1126,7 +1218,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'National Geographic style nature documentary footage, macro shot of flora, realistic textures, soft natural lighting, 8k, highly detailed',
+        'Filme documentário de natureza estilo National Geographic, foto macro da flora, texturas realistas, iluminação natural suave, 8k, altamente detalhado',
     },
   },
   {
@@ -1141,7 +1233,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'TV news broadcast studio, professional anchor desk, breaking news graphics on screen, modern newsroom background, realistic',
+        'Estúdio de transmissão de notícias de TV, mesa de âncora profissional, gráficos de notícias de última hora na tela, fundo de redação moderno, realista',
     },
   },
   {
@@ -1156,7 +1248,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Grand opera stage performance, soprano singer in elaborate costume, dramatic stage lighting, red velvet curtains, emotional expression, theatrical atmosphere, cinematic',
+        'Performance em grande palco de ópera, cantora soprano em traje elaborado, iluminação de palco dramática, cortinas de veludo vermelho, expressão emocional, atmosfera teatral, cinematográfico',
     },
   },
   {
@@ -1171,7 +1263,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Grand orchestra hall, conductor waving baton, symphony musicians, golden lighting, elegant atmosphere, wide shot, cinematic, 8k',
+        'Grande salão de orquestra, maestro regendo, músicos sinfônicos, iluminação dourada, atmosfera elegante, plano aberto, cinematográfico, 8k',
     },
   },
   {
@@ -1186,7 +1278,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Feeling of pride and achievement, an athlete holding a gold medal under stadium lights, triumphant pose, sweat on brow, cinematic low angle, heroic lighting, slow motion',
+        'Sentimento de orgulho e realização, um atleta segurando uma medalha de ouro sob as luzes do estádio, pose triunfante, suor na testa, ângulo baixo cinematográfico, iluminação heróica, câmera lenta',
     },
   },
   {
@@ -1201,7 +1293,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Inner peace and zen, beautiful japanese garden, water rippling slowly in a pond, lotus flower, soft mist, gentle movement, calm atmosphere, meditation vibe',
+        'Paz interior e zen, belo jardim japonês, água ondulando lentamente em um lago, flor de lótus, névoa suave, movimento gentil, atmosfera calma, vibe de meditação',
     },
   },
   {
@@ -1216,7 +1308,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Character animation, the character from the reference image performing a natural action, maintaining consistent appearance, cinematic lighting, high quality',
+        'Animação de personagem, o personagem da imagem de referência realizando uma ação natural, mantendo aparência consistente, iluminação cinematográfica, alta qualidade',
       referenceImages: [],
     },
   },
@@ -1232,7 +1324,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Grand piano in a spotlight, dust motes dancing in light, elegant concert hall background, pianist hands playing, emotive, classical atmosphere, cinematic',
+        'Piano de cauda sob um holofote, poeira dançando na luz, fundo de sala de concertos elegante, mãos de pianista tocando, emotivo, atmosfera clássica, cinematográfico',
     },
   },
   {
@@ -1247,7 +1339,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Oil painting style animation, van gogh inspired, thick brush strokes, artistic texture, colorful landscape, impressionism',
+        'Animação estilo pintura a óleo, inspirado em van gogh, pinceladas grossas, textura artística, paisagem colorida, impressionismo',
     },
   },
   {
@@ -1262,7 +1354,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        '8-bit pixel art game scene, side scroller level, retro aesthetic, vibrant palette, nostalgic gaming vibe',
+        'Cena de jogo pixel art 8-bit, nível de rolagem lateral, estética retrô, paleta vibrante, vibe nostálgica de jogos',
     },
   },
   {
@@ -1277,7 +1369,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Punk rock concert in a dirty basement club, mohawks, leather jackets, mosh pit, aggressive energy, graffiti walls, chaotic camera movement, raw aesthetic',
+        'Show de punk rock em um clube de porão sujo, moicanos, jaquetas de couro, mosh pit, energia agressiva, paredes com graffiti, movimento de câmera caótico, estética crua',
     },
   },
   {
@@ -1292,7 +1384,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Classical string quartet performing in a luxurious baroque ballroom, golden chandeliers, elegant atmosphere, soft camera movement, 4k, cinematic lighting, sophisticated',
+        'Quarteto de cordas clássico tocando em um luxuoso salão de baile barroco, lustres dourados, atmosfera elegante, movimento de câmera suave, 4k, iluminação cinematográfica, sofisticado',
     },
   },
   {
@@ -1307,7 +1399,22 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'R&B music video scene, singer on a rooftop at night with city lights bokeh, rain wet pavement, purple and blue mood lighting, emotional vibe, cinematic, smooth',
+        'Cena de videoclipe de R&B, cantor em um terraço à noite com bokeh de luzes da cidade, calçada molhada pela chuva, iluminação roxa e azul, vibe emocional, cinematográfico, suave',
+    },
+  },
+  {
+    id: 'rap',
+    name: 'Rap Cypher',
+    description: 'Rima, ritmo e cultura de rua.',
+    icon: <MicIcon className="w-6 h-6 text-zinc-300" />,
+    params: {
+      mode: GenerationMode.TEXT_TO_VIDEO,
+      model: VeoModel.VEO_FAST,
+      resolution: Resolution.P720,
+      aspectRatio: AspectRatio.LANDSCAPE,
+      outputFormat: OutputFormat.MP4,
+      prompt:
+        'Roda de rima (cypher) em uma esquina urbana à noite, rappers com microfone, iluminação de poste de rua, fumaça, estética crua, lente grande angular, energia underground',
     },
   },
   {
@@ -1322,7 +1429,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Magical realism style, blending realistic everyday scenes with fantastical elements, deep symbolic meaning, dreamlike atmosphere, cinematic lighting, highly detailed, surreal twist',
+        'Estilo realismo mágico, misturando cenas cotidianas realistas com elementos fantásticos, significado simbólico profundo, atmosfera onírica, iluminação cinematográfica, altamente detalhado, toque surreal',
     },
   },
   {
@@ -1337,13 +1444,13 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Reggae music vibes, musicians on a tropical beach at sunset, dreadlocks, red gold and green lighting accents, relaxed atmosphere, palm trees, slow motion, cinematic',
+        'Vibes de música Reggae, músicos em uma praia tropical ao pôr do sol, dreadlocks, detalhes de iluminação em vermelho ouro e verde, atmosfera relaxada, palmeiras, câmera lenta, cinematográfico',
     },
   },
   {
     id: 'vhs',
     name: 'Retro VHS',
-    description: 'Estilo caseiro dos anos 90.',
+    description: 'Estilo de vídeo caseiro dos anos 90.',
     icon: <TvIcon className="w-6 h-6 text-purple-300" />,
     params: {
       mode: GenerationMode.TEXT_TO_VIDEO,
@@ -1352,7 +1459,22 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        '1990s home video style, VHS glitch effect, tracking lines, nostalgic family vacation vibe, low fidelity aesthetic',
+        'Estilo de vídeo caseiro dos anos 90, efeito de glitch VHS, linhas de rastreamento, vibe nostálgica de férias em família, estética de baixa fidelidade',
+    },
+  },
+  {
+    id: 'psy-rock',
+    name: 'Rock Psicodélico',
+    description: 'Cores vibrantes e distorção anos 70.',
+    icon: <EyeIcon className="w-6 h-6 text-indigo-400" />,
+    params: {
+      mode: GenerationMode.TEXT_TO_VIDEO,
+      model: VeoModel.VEO_FAST,
+      resolution: Resolution.P720,
+      aspectRatio: AspectRatio.LANDSCAPE,
+      outputFormat: OutputFormat.MP4,
+      prompt:
+        'Banda de rock psicodélico dos anos 70, efeitos visuais caleidoscópicos, cores líquidas girando, distorção de lente, roupas vintage, atmosfera alucinante, videoclipe retrô',
     },
   },
   {
@@ -1367,7 +1489,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Rio de Janeiro carnival parade (sambódromo), samba dancers with elaborate colorful feather costumes, intricate floats, drummers, vibrant energy, confetti, cinematic 4k',
+        'Desfile de carnaval do Rio de Janeiro (sambódromo), passistas de samba com elaborados trajes de penas coloridas, carros alegóricos intrincados, bateristas, energia vibrante, confete, cinematográfico 4k',
     },
   },
   {
@@ -1382,7 +1504,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Nostalgic scene representing longing (saudade), old film grain effect, looking out a rainy window, sepia tones, fading memory, sentimental, emotional',
+        'Cena nostálgica representando saudade, efeito de granulação de filme antigo, olhando por uma janela chuvosa, tons de sépia, memória desaparecendo, sentimental, emocional',
     },
   },
   {
@@ -1397,7 +1519,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Perfect serenity, a still lake at dawn reflecting mountains like a mirror, morning mist, complete silence, cool color palette, meditative, cinematic 8k',
+        'Serenidade perfeita, um lago calmo ao amanhecer refletindo montanhas como um espelho, névoa matinal, silêncio completo, paleta de cores frias, meditativo, cinematográfico 8k',
     },
   },
   {
@@ -1412,7 +1534,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Brazilian countryside (sertão) landscape, acoustic guitar on a wooden porch, sunset over a farm, horses grazing in distance, golden hour, peaceful rustic vibe, cinematic',
+        'Paisagem do sertão brasileiro, violão acústico em uma varanda de madeira, pôr do sol sobre uma fazenda, cavalos pastando ao longe, hora dourada, vibe rústica pacífica, cinematográfico',
     },
   },
   {
@@ -1427,7 +1549,22 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Cinematic shot of loneliness, a lone figure sitting on a bench in a vast empty park during autumn, falling leaves, wide shot showing isolation, cold colors, melancholic beauty',
+        'Cena cinematográfica de solidão, uma figura solitária sentada em um banco em um parque vazio e vasto durante o outono, folhas caindo, plano aberto mostrando isolamento, cores frias, beleza melancólica',
+    },
+  },
+  {
+    id: 'steampunk',
+    name: 'Steampunk Vitoriano',
+    description: 'Engrenagens, vapor e latão.',
+    icon: <WrenchIcon className="w-6 h-6 text-amber-500" />,
+    params: {
+      mode: GenerationMode.TEXT_TO_VIDEO,
+      model: VeoModel.VEO,
+      resolution: Resolution.P1080,
+      aspectRatio: AspectRatio.LANDSCAPE,
+      outputFormat: OutputFormat.MP4,
+      prompt:
+        'Cidade steampunk vitoriana, engrenagens de latão, vapor, dirigíveis no céu, arquitetura mecânica, iluminação sépia, detalhado, fantasia industrial',
     },
   },
   {
@@ -1442,7 +1579,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Claymation style animation, handmade plasticine character, stop motion texture, soft lighting, whimsical atmosphere',
+        'Animação estilo claymation, personagem de massinha feito à mão, textura de stop motion, iluminação suave, atmosfera lúdica',
     },
   },
   {
@@ -1457,7 +1594,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.PORTRAIT,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Vertical social media story, vibrant colors, upbeat energy, trending aesthetic, bright natural lighting, lifestyle vibe',
+        'Story vertical para rede social, cores vibrantes, energia otimista, estética de tendência, iluminação natural brilhante, vibe lifestyle',
     },
   },
   {
@@ -1472,7 +1609,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Concept of surprise, extreme close up of eyes widening in joyful shock, explosion of colorful confetti and streamers in background, high energy, freeze frame effect, vibrant',
+        'Conceito de surpresa, close-up extremo de olhos arregalando em choque alegre, explosão de confete colorido e serpentinas ao fundo, alta energia, efeito de congelamento de quadro, vibrante',
     },
   },
   {
@@ -1487,7 +1624,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        '80s synthwave aesthetic, neon grid horizon, retro sun, purple and cyan fog, digital landscape, retrofuturism, loop',
+        'Estética synthwave anos 80, horizonte de grade neon, sol retrô, névoa roxa e ciano, paisagem digital, retrofuturismo, loop',
     },
   },
   {
@@ -1502,7 +1639,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Minimalist tech background, abstract white 3D geometric shapes, clean lighting, modern aesthetic, smooth motion',
+        'Fundo tecnológico minimalista, formas geométricas 3D brancas abstratas, iluminação limpa, estética moderna, movimento suave',
     },
   },
   {
@@ -1517,7 +1654,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Underground techno club, industrial warehouse, strobe lights, fog, silhouette crowd dancing, raw energy, dark atmosphere, monochromatic',
+        'Clube de techno underground, armazém industrial, luzes estroboscópicas, neblina, silhueta de multidão dançando, energia crua, atmosfera escura, monocromático',
     },
   },
   {
@@ -1532,7 +1669,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Visualizing boredom, a ticking clock on a wall, dust motes floating in a ray of afternoon light, slow camera movement, repetitive motion, mundane atmosphere, muted colors',
+        'Visualizando o tédio, um relógio tiquetaqueando na parede, poeira flutuando em um raio de luz da tarde, movimento de câmera lento, movimento repetitivo, atmosfera mundana, cores suaves',
     },
   },
   {
@@ -1547,7 +1684,22 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Gentle tenderness, a mother holding a baby\'s hand, soft pastel colors, warm cozy lighting, dreamy blur, emotional connection, pure love, cinematic',
+        'Ternura gentil, uma mãe segurando a mão de um bebê, cores pastéis suaves, iluminação aconchegante quente, desfoque onírico, conexão emocional, amor puro, cinematográfico',
+    },
+  },
+  {
+    id: 'trance',
+    name: 'Trance Hipnótico',
+    description: 'Viagem visual e lasers infinitos.',
+    icon: <ActivityIcon className="w-6 h-6 text-blue-400" />,
+    params: {
+      mode: GenerationMode.TEXT_TO_VIDEO,
+      model: VeoModel.VEO_FAST,
+      resolution: Resolution.P720,
+      aspectRatio: AspectRatio.LANDSCAPE,
+      outputFormat: OutputFormat.MP4,
+      prompt:
+        'Visualizador de música trance, túnel de luz infinito, lasers pulsantes sincronizados, cores azul e branco, geometria sagrada, sensação de velocidade, eufórico',
     },
   },
   {
@@ -1562,7 +1714,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Cinematic movie trailer intro, dramatic lighting, high contrast, epic atmosphere, 4k resolution, slow camera movement, volumetric fog',
+        'Intro de trailer de filme cinematográfico, iluminação dramática, alto contraste, atmosfera épica, resolução 4k, movimento de câmera lento, névoa volumétrica',
     },
   },
   {
@@ -1577,7 +1729,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Modern Trap music video aesthetic, low angle shot of a luxury sports car in a dark studio, vibrant purple and blue neon lasers, smoke, glossy reflections, modern style, cinematic 4k',
+        'Estética moderna de videoclipe de Trap, ângulo baixo de um carro esportivo de luxo em um estúdio escuro, lasers neon roxos e azuis vibrantes, fumaça, reflexos brilhantes, estilo moderno, cinematográfico 4k',
     },
   },
   {
@@ -1592,7 +1744,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Abstract audio visualizer for movie soundtrack, elegant waveforms moving to music, cinematic particles, dark background, gold and silver tones',
+        'Visualizador de áudio abstrato para trilha sonora de filme, formas de onda elegantes movendo-se com a música, partículas cinematográficas, fundo escuro, tons dourados e prateados',
     },
   },
   {
@@ -1607,7 +1759,7 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Melancholic sadness, lonely silhouette walking in the rain, empty city street at night, reflections on wet pavement, blue mood, cinematic, slow pace',
+        'Tristeza melancólica, silhueta solitária caminhando na chuva, rua da cidade vazia à noite, reflexos no pavimento molhado, clima azul, cinematográfico, ritmo lento',
     },
   },
   {
@@ -1622,7 +1774,37 @@ const TEMPLATES: Template[] = [
       aspectRatio: AspectRatio.LANDSCAPE,
       outputFormat: OutputFormat.MP4,
       prompt:
-        'Music video style, neon night club, silhouette dancing, strobing lights, energetic atmosphere, cinematic color grading',
+        'Estilo videoclipe, boate neon, silhueta dançando, luzes estroboscópicas, atmosfera energética, color grading cinematográfico',
+    },
+  },
+  {
+    id: 'vlog',
+    name: 'Vlog de Viagem',
+    description: 'Estilo selfie em locais exóticos.',
+    icon: <PlaneIcon className="w-6 h-6 text-sky-500" />,
+    params: {
+      mode: GenerationMode.TEXT_TO_VIDEO,
+      model: VeoModel.VEO_FAST,
+      resolution: Resolution.P720,
+      aspectRatio: AspectRatio.LANDSCAPE,
+      outputFormat: OutputFormat.MP4,
+      prompt:
+        'Estilo vlog de viagem, câmera na mão (selfie), pessoa sorrindo com paisagem de montanha famosa ao fundo, luz natural brilhante, alta energia, youtuber, 4k',
+    },
+  },
+  {
+    id: 'western',
+    name: 'Western Clássico',
+    description: 'Duelo ao meio-dia no velho oeste.',
+    icon: <SunIcon className="w-6 h-6 text-orange-600" />,
+    params: {
+      mode: GenerationMode.TEXT_TO_VIDEO,
+      model: VeoModel.VEO,
+      resolution: Resolution.P1080,
+      aspectRatio: AspectRatio.LANDSCAPE,
+      outputFormat: OutputFormat.MP4,
+      prompt:
+        'Cena de filme de faroeste clássico, duelo ao meio-dia em uma cidade fantasma empoeirada, close-up nos olhos, plantas rolando (tumbleweed), iluminação dura do sol, tensão, textura de filme granulado, cinemascope',
     },
   },
 ];
@@ -1632,29 +1814,63 @@ interface TemplateLibraryProps {
 }
 
 const TemplateLibrary: React.FC<TemplateLibraryProps> = ({onSelect}) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredTemplates = TEMPLATES.filter((template) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      template.name.toLowerCase().includes(query) ||
+      template.description.toLowerCase().includes(query)
+    );
+  });
+
   return (
     <div className="w-full max-w-4xl mx-auto mt-8 px-2" id="tour-templates">
-      <h3 className="text-gray-400 text-sm font-semibold mb-4 uppercase tracking-wider">
-        Comece com um Modelo
-      </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {TEMPLATES.map((template) => (
-          <button
-            key={template.id}
-            onClick={() => onSelect(template.params)}
-            className="flex flex-col items-start p-4 bg-[#1f1f1f] border border-gray-700 hover:border-indigo-500 hover:bg-gray-800 rounded-xl transition-all duration-300 ease-out group text-left h-full min-h-[140px] hover:shadow-xl hover:shadow-indigo-500/10 hover:scale-[1.02]">
-            <div className="mb-3 p-2 bg-gray-800 rounded-lg group-hover:bg-gray-700 transition-colors">
-              {template.icon}
-            </div>
-            <div className="font-semibold text-gray-200 text-sm mb-1">
-              {template.name}
-            </div>
-            <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
-              {template.description}
-            </p>
-          </button>
-        ))}
+      <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center mb-4 gap-4">
+        <h3 className="text-gray-400 text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
+          Comece com um Modelo
+        </h3>
+        
+        {/* Search Input */}
+        <div className="relative w-full sm:w-64">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <SearchIcon className="h-4 w-4 text-gray-500" />
+          </div>
+          <input
+            type="text"
+            className="block w-full pl-10 pr-3 py-2 border border-gray-700 rounded-lg leading-5 bg-[#1f1f1f] text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-gray-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm transition-colors"
+            placeholder="Buscar modelo..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
+
+      {filteredTemplates.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {filteredTemplates.map((template) => (
+            <button
+              key={template.id}
+              onClick={() => onSelect(template.params)}
+              className="flex flex-col items-start p-4 bg-[#1f1f1f] border border-gray-700 hover:border-indigo-500 hover:bg-gray-800 rounded-xl transition-all duration-300 ease-out group text-left h-full min-h-[140px] hover:shadow-xl hover:shadow-indigo-500/10 hover:scale-[1.02]">
+              <div className="mb-3 p-2 bg-gray-800 rounded-lg group-hover:bg-gray-700 transition-colors">
+                {template.icon}
+              </div>
+              <div className="font-semibold text-gray-200 text-sm mb-1">
+                {template.name}
+              </div>
+              <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
+                {template.description}
+              </p>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12 bg-[#1f1f1f] border border-gray-700 rounded-xl border-dashed">
+          <SearchIcon className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+          <p className="text-gray-500 text-sm">Nenhum modelo encontrado para "{searchQuery}"</p>
+        </div>
+      )}
     </div>
   );
 };

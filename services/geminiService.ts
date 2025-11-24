@@ -8,44 +8,194 @@ import { GenerateVideoParams, GenerationMode, OutputFormat } from '../types';
 
 // --- ASSET LIBRARIES FOR FREE MODE ---
 
-// Curated list of high-quality generic stock videos (Public Domain / Creative Commons)
-// Mapped by keywords to simulate "generation" based on prompts.
+// Mapeamento inteligente de vídeos de amostra do Google para "Vibes" e Tópicos.
+// Usamos vídeos diferentes para categorias diferentes para simular variedade.
 const STOCK_VIDEOS: Record<string, string[]> = {
-  nature: [
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4", // Placeholder for cinematic
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", // Placeholder
+  // --- NATUREZA & PAZ ---
+  natureza: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4", // Natureza
   ],
-  tech: [
+  praia: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+  ],
+  mar: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+  ],
+  paz: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+  ],
+  zen: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+  ],
+
+  // --- AÇÃO & ESPORTES & VELOCIDADE ---
+  esportes: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", // Ação/Carros
+  ],
+  carros: [
     "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
   ],
-  city: [
+  velocidade: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+  ],
+  corrida: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+  ],
+  trap: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", // Carros de luxo
+  ],
+
+  // --- TECNOLOGIA & SCI-FI & INDUSTRIAL ---
+  tecnologia: [
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4", // Sci-Fi
+  ],
+  cyberpunk: [
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+  ],
+  espaco: [
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+  ],
+  futuro: [
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+  ],
+  rock: [
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4", // Vibe industrial/pesada
+  ],
+  metal: [
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+  ],
+  punk: [
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+  ],
+  techno: [
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+  ],
+  cidade: [
     "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
   ],
-  abstract: [
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+  urbano: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
   ],
-  // Fallback generic high quality video
+
+  // --- FANTASIA & DRAMA & EMOÇÃO ---
+  fantasia: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4", // Fantasia/Dragão
+  ],
+  historia: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+  ],
+  tristeza: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4", // Tem cenas tristes
+  ],
+  dor: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+  ],
+  solidao: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+  ],
+  medo: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4", // Dragão/Ameaça
+  ],
+  terror: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+  ],
+
+  // --- ALEGRIA & LIFESTYLE & FAMÍLIA ---
+  alegria: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", // Lifestyle/Happy
+  ],
+  felicidade: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+  ],
+  familia: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+  ],
+  amigos: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+  ],
+  festa: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+  ],
+  comida: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+  ],
+
+  // --- ANIMAÇÃO & FOFURA & ESTRANHO ---
+  animacao: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", // Cartoon
+  ],
+  fofo: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+  ],
+  animal: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+  ],
+  engracado: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+  ],
+  abstrato: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", // Surreal
+  ],
+  sonho: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+  ],
+  confusao: [
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+  ],
+
+  // Fallback
   default: [
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
   ]
 };
 
-// Curated list of royalty-free audio samples
+// Expanded Audio Library
 const STOCK_AUDIO: Record<string, string[]> = {
-  calm: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"],
-  energetic: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3"],
+  // Relaxing
+  relaxante: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"],
+  calmo: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"],
+  zen: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"],
+  paz: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"],
+  tristeza: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"], // Slower
+  melancolia: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"],
+
+  // Upbeat / Energetic
+  agitado: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3"],
+  energia: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3"],
+  festa: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3"],
+  pop: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3"],
+  alegria: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"],
+
+  // Genres
+  rock: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3"], // More intense
+  metal: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3"],
+  eletronica: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3"],
+  techno: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3"],
+  jazz: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3"], // Smoother
+  blues: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3"],
+  classico: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"], // Piano-ish
+  piano: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"],
+
   default: ["https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3"]
 };
 
 // Helper to select best matching asset
 const getBestMatch = (prompt: string, library: Record<string, string[]>): string => {
   const lowerPrompt = prompt.toLowerCase();
+  
+  // Check specifically for keys present in the prompt
   for (const key in library) {
     if (key !== 'default' && lowerPrompt.includes(key)) {
       const items = library[key];
-      return items[Math.floor(Math.random() * items.length)];
+      // Deterministic randomness based on prompt length to keep it consistent per prompt but random per topic
+      const index = prompt.length % items.length;
+      return items[index];
     }
   }
+  
+  // If no specific match, pick a random default
   const defaults = library.default;
   return defaults[Math.floor(Math.random() * defaults.length)];
 };
@@ -122,23 +272,11 @@ export const generateVideo = async (
       const targetVoice = voices.find(v => v.name.includes(params.voiceName || 'Google')) || voices[0];
       if (targetVoice) utterance.voice = targetVoice;
 
-      // Since we can't easily get a Blob from SpeechSynthesis without MediaRecorder (which requires playing it),
-      // We will fallback to a "Mock" audio blob for the download/visualizer, 
-      // BUT we will actually play the audio for the user to hear.
-      // For a true file download without server, we'd need a different approach.
-      // Here we create a silent WAV container just to satisfy the type return, 
-      // but in a real "free tool" without backend, downloading TTS is hard.
-      // *Strategy Swap:* We will use a placeholder audio URL for the "Result" 
-      // that represents the "generated" file.
-      
+      // Placeholder audio URL strategy
       const mockAudioUrl = STOCK_AUDIO.default[0];
       fetch(mockAudioUrl)
         .then(r => r.blob())
         .then(blob => {
-           // We resolve with the stock audio blob to prevent app crash, 
-           // but technically WebSpeech is playing locally.
-           // Ideally, we would record the WebSpeech output, but that's complex.
-           // This is a trade-off for "No Cost".
            resolve({
              objectUrl: URL.createObjectURL(blob),
              blob: blob,
@@ -163,11 +301,16 @@ export const generateVideo = async (
   }
 
   // 4. VIDEO GENERATION (ASSET MATCHING - "SMART STOCK")
-  // Since no free Text-to-Video API exists, we match the prompt to a high-quality stock video.
+  // Includes TEXT_TO_VIDEO and IMAGE_TO_VIDEO modes
+  
+  if (params.mode === GenerationMode.IMAGE_TO_VIDEO) {
+     console.log("Image source provided:", params.sourceImage ? "Yes" : "No");
+     // In this mock mode, we fallback to text matching for the stock video.
+  }
+
+  // Use the upgraded matching logic
   const videoUrl = getBestMatch(params.prompt, STOCK_VIDEOS);
   
-  // Fetch blob to allow "download" to work properly within CORS limits (if possible)
-  // Note: Some CDNs might block blob fetching. 
   try {
     const res = await fetch(videoUrl);
     const blob = await res.blob();

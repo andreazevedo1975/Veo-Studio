@@ -105,7 +105,7 @@ const VideoResult: React.FC<VideoResultProps> = ({
     // Sanitize prompt for filename
     const safePrompt = prompt
       ? prompt.substring(0, 30).replace(/[^a-z0-9]/gi, '-').toLowerCase()
-      : 'creation';
+      : 'criacao';
 
     link.download = `${prefix}-${safePrompt}-${Date.now()}.${extension}`;
     document.body.appendChild(link);

@@ -267,6 +267,18 @@ const VideoUpload: React.FC<{
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Manage video preview URL to prevent memory leaks
+  useEffect(() => {
+    if (video?.file) {
+      const url = URL.createObjectURL(video.file);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setPreviewUrl(null);
+    }
+  }, [video]);
 
   const processFile = async (file: File) => {
     if (!file.type.startsWith('video/')) {
@@ -339,12 +351,14 @@ const VideoUpload: React.FC<{
           }
         `}
       >
-         {video ? (
+         {video && previewUrl ? (
           <>
             <video
-              src={URL.createObjectURL(video.file)}
+              src={previewUrl}
               muted
               loop
+              autoPlay
+              playsInline
               className={`w-full h-full object-cover rounded-lg ${isLoading ? 'opacity-40' : ''}`}
             />
             <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity ${isLoading ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
